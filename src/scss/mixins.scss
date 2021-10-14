@@ -1,0 +1,22 @@
+//fonts
+@mixin font ($fs: 14px, $lh: 1, $fw: 400) {
+    font-size: $fs;
+    line-height: $lh;
+    font-weight: $fw;
+}
+
+//position
+@mixin over-content-position ($pos: absolute) {
+    position: $pos;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+// user-select
+@mixin user-select ($val: none) {
+    -moz-user-select: $val;
+    -khtml-user-select: $val;
+    user-select: $val;
+}

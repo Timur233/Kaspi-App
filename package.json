@@ -1,0 +1,42 @@
+{
+  "name": "kaspi-app-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite --open",
+    "build": "vite build",
+    "serve": "vite preview",
+    "prepare": "npx simple-git-hooks"
+  },
+  "devDependencies": {
+    "eclint": "^2.8.1",
+    "eslint": "^7.2.0",
+    "eslint-config-airbnb-base": "14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "lint-staged": "^11.1.2",
+    "sass": "^1.41.1",
+    "simple-git-hooks": "^2.6.1",
+    "stylelint": "^13.13.1",
+    "stylelint-config-standard": "^22.0.0",
+    "vite": "^2.5.4"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,ts,vue}": [
+      "eclint fix",
+      "eslint --fix"
+    ],
+    "*.{scss,css,vue}": [
+      "eclint fix",
+      "stylelint fix"
+    ],
+    ".editorconfig": [
+      "eclint fix"
+    ]
+  },
+  "author": "Iskandarov Timur",
+  "license": "MIT"
+}

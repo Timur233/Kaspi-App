@@ -1,0 +1,50 @@
+.cats-validator {
+    &__title {
+        margin-bottom: 16px;
+    }
+
+    &__wrapper {
+        display: grid;
+        grid-template-rows: 1fr;
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+.validator {
+    overflow: hidden;
+    border-radius: 8px 8px 0 0;
+
+    &__title-block {
+        background-color: $dark-green;
+        color: $white;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: spacer(2) spacer(4);
+    }
+
+    &__title {
+        font-size: 1rem;
+        font-weight: 400;
+        margin: 0;
+        text-transform: uppercase;
+    }
+
+    &__search {
+        margin-left: auto;
+        width: 280px;
+    }
+
+    &__body {
+        border: 1px solid #e5e5e5;
+        background: #f9f9f9;
+        border-radius: 0 0 8px 8px;
+        overflow: hidden;
+    }
+}

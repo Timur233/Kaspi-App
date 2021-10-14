@@ -1,0 +1,57 @@
+//colors
+$white: #fff;
+$text-color: #1c1819;
+$inputs-bg: #f2f2f3;
+$blue: #2a81dd;
+$red: #f33;
+$black: #000;
+$yellow: #ffdd61;
+$green: #64bd38;
+$field-blue: #00458a;
+$field-gray: #d4d4da;
+$field-beige: #efe8d8;
+$field-green: #00a200;
+$field-red: #dc1818;
+$field-yellow: #f1f124;
+
+//Brand colors
+$dark-green: #055749;
+
+//colors light
+$blue-very-light: #f0fafd;
+$blue-light: #d6ecfb;
+$another-blue-light: #e9f2fb;
+$grey-light: #888b94;
+$green-light: #eff8eb;
+$yellow-light: #fffae7;
+
+//fonts
+$font-small: 13px;
+$font-normal: 14px;
+$font-middle: 16px;
+$font-large: 20px;
+$font-big: 24px;
+
+//sidebar
+$sidebar-width: 260px;
+
+//transition
+$slow-animation: 0.24s;
+$midd-animation: 0.18s;
+$fast-animation: 0.16s;
+
+//z-index
+$layer--1: -1;
+$layer-0: 0;
+$layer-1: 1;
+$layer-2: 2;
+
+//margin
+@function spacer($factor: 1) {
+    @return 4px * $factor;
+}
+
+//border-radius
+@function softer($factor: 1) {
+    @return 2px * $factor;
+}

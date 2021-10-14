@@ -1,0 +1,80 @@
+.button {
+    @include font($font-middle, 24px);
+
+    padding: spacer(1) spacer(5);
+    border-top: 2px;
+    border-bottom: 2px;
+    border-style: solid;
+    border-color: $blue;
+    position: relative;
+    background-color: $blue;
+    color: $white;
+    border-radius: softer(4);
+    cursor: pointer;
+    transition: $fast-animation background-color, $fast-animation border-color;
+
+    &:hover {
+        background-color: lighten($blue, 10);
+        border-color: lighten($blue, 10);
+    }
+
+    &:focus,
+    &:active {
+        box-shadow: 0 0 0 3px rgb($blue, 0.3);
+    }
+
+    &--white {
+        background: $white;
+        border-color: $white;
+        color: $blue;
+        box-shadow: 0 2px 4px rgb($text-color, 0.1);
+
+        &:hover {
+            background-color: $blue;
+            border-color: $blue;
+            color: $white;
+        }
+    }
+
+    &--yellow {
+        background: $yellow;
+        border-color: $yellow;
+        color: $text-color;
+        box-shadow: 0 2px 4px rgb($text-color, 0.1);
+
+        &:hover {
+            background-color: lighten($yellow, 10);
+            border-color: lighten($yellow, 10);
+        }
+
+        &:focus,
+        &:active {
+            box-shadow: 0 0 0 3px rgb($yellow, 0.3);
+        }
+    }
+
+    &--green {
+        background: $green;
+        border-color: $green;
+        color: $white;
+        box-shadow: 0 2px 4px rgb($text-color, 0.1);
+
+        &:hover {
+            background-color: lighten($green, 10);
+            border-color: lighten($green, 10);
+        }
+
+        &:focus,
+        &:active {
+            box-shadow: 0 0 0 3px rgb($green, 0.3);
+        }
+    }
+
+    &--small {
+        @include font($font-normal, 18px, 600);
+
+        padding: spacer(1) spacer(2);
+        border: 1px solid rgb($text-color, 0.1);
+        outline: none;
+    }
+}
