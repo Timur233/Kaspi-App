@@ -15,7 +15,7 @@
 
     &__wrapper {
         padding: spacer(2) spacer(3);
-        border-bottom: 1px solid #e5e5e5;
+        border-bottom: 1px solid #ccc;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -50,8 +50,8 @@
     }
 
     &__sub-menu {
-        background: cornsilk;
-        border-bottom: 1px solid #e5e5e5;
+        background: #ebebeb;
+        border-bottom: 1px solid #ccc;
         padding-left: spacer(10);
 
         &--third {
