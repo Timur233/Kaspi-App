@@ -11,12 +11,15 @@
 
     &__item {
         width: 100%;
-        padding: spacer(2) spacer(4);
+    }
+
+    &__wrapper {
+        padding: spacer(2) spacer(3);
         border-bottom: 1px solid #e5e5e5;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: spacer(4);
+        gap: spacer(2);
 
         &:last-child {
             border-bottom: none;
@@ -24,15 +27,35 @@
     }
 
     &__button {
-        width: 32px;
-        height: 32px;
+        width: 22px;
+        height: 22px;
+        font-weight: 400;
+        padding: 0
     }
 
     &__name {
-        @include font(16px, 1, 500);
+        @include font($font-normal, 1, 400);
     }
 
-    &__sub-item {
+    &__fly-button {
+        margin-left: auto;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        background: none;
+        font-size: $font-large;
+    }
+
+    &__sub-menu {
         background: cornsilk;
+        border-bottom: 1px solid #e5e5e5;
+        padding-left: spacer(10);
+
+        &--third {
+            border: none;
+        }
     }
 }

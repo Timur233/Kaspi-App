@@ -70,10 +70,29 @@
         }
     }
 
+    &--outline {
+        background: $white;
+        border-color: $white;
+        color: $dark-green;
+        box-shadow: 0 2px 4px rgb($text-color, 0.1);
+
+        &:hover {
+            background-color: lighten($green, 10);
+            border-color: lighten($green, 10);
+            color: #fff
+        }
+
+        &:focus,
+        &:active {
+            box-shadow: 0 0 0 3px rgb($green, 0.3);
+        }
+    }
+
     &--small {
-        @include font($font-normal, 18px, 600);
+        @include font($font-normal, 1, 600);
 
         padding: spacer(1) spacer(2);
+        border-radius: softer(2);
         border: 1px solid rgb($text-color, 0.1);
         outline: none;
     }

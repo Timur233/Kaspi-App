@@ -6,8 +6,9 @@
     &__wrapper {
         display: grid;
         grid-template-rows: 1fr;
-        grid-template-columns: 1fr;
-        padding: 20px;
+        grid-template-columns: 1fr 1fr;
+        padding: spacer(5);
+        gap: spacer(4);
     }
 
     &__item {
@@ -18,22 +19,22 @@
 
 .validator {
     overflow: hidden;
-    border-radius: 8px 8px 0 0;
+    border-radius: softer(2);
 
     &__title-block {
         background-color: $dark-green;
         color: $white;
         display: flex;
         align-items: center;
-        gap: 16px;
-        padding: spacer(2) spacer(4);
+        gap: spacer(3);
+        padding: spacer(2) spacer(3);
     }
 
     &__title {
-        font-size: 1rem;
+        font-size: $font-middle;
         font-weight: 400;
         margin: 0;
-        text-transform: uppercase;
+        padding-left: spacer(2);
     }
 
     &__search {
@@ -44,7 +45,7 @@
     &__body {
         border: 1px solid #e5e5e5;
         background: #f9f9f9;
-        border-radius: 0 0 8px 8px;
+        border-radius: 0 0 softer(2);
         overflow: hidden;
     }
 }

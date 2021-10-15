@@ -4,11 +4,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Category</title>
-    <!-- <link rel="stylesheet" href="../src/css/svb.css"> -->
+    <link rel="stylesheet" href="../src/css/svb.css">
 </head>
 <body>
     <div id="wrapper">
-        <!-- <header>
+        <header>
             <div id="headerBlock">
                 <div id="headerLogoBlock" class="headerElement">
                     <img src="img/logo.png " alt="logo " width="30" height="30">
@@ -60,7 +60,7 @@
                 </ul>
             </div>
             </div>
-        </header> -->
+        </header>
         <section class="cats-validator">
             <h3 class="cats-validator__title page-title">Сопостовление категорий</h3>
             <div class="cats-validator__wrapper">
@@ -69,36 +69,117 @@
                         <h3 class="validator__title">Локальные категории</h3>
                         <div class="validator__search search-box">
                             <input type="text" class="search-box__input" placeholder="Поиск">
-                            <button type="button" class="search-box__fly-button">Искать</button>
+                            <button type="button" class="search-box__fly-button">
+                                <i class="icon icon-search"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="validator__body">
                         <ul class="category-list validator-categories">
                             <li class="category-list__item">
-                                <button class="button button--circle category-list__button button--small button--green">
-                                    +
-                                </button>
-                                <span class="category-list__name">
-                                    Строительство и ремонт
-                                </span>
-                                <ul class="category-list category-list__sub-item">
+                                <div class="category-list__wrapper">
+                                    <button class="category-list__button button button--small button--outline">
+                                        <i class="icon icon-minus"></i>
+                                    </button>
+                                    <span class="category-list__name">
+                                        Строительство и ремонт
+                                    </span>
+                                </div>
+                                <ul class="category-list category-list__sub-menu category-list__sub-menu--second">
                                     <li class="category-list__item">
-                                        <button class="button button--circle category-list__button button--small button--green">
-                                            +
-                                        </button>
-                                        <span class="category-list__name">
-                                            Строительство и ремонт
-                                        </span>
+                                        <div class="category-list__wrapper ">
+                                            <button class="category-list__button button button--small button--outline">
+                                                <i class="icon icon-minus"></i>
+                                            </button>
+                                            <span class="category-list__name">
+                                                Сварочное оборудование
+                                            </span>
+                                        </div>
+                                        <ul class="category-list category-list__sub-menu category-list__sub-menu--third">
+                                            <li class="category-list__item">
+                                                <div class="category-list__wrapper">
+                                                    <input type="checkbox" class="category-list__checker input">
+                                                    <span class="category-list__name">
+                                                        Плазмотроны
+                                                    </span>
+                                                    <button class="category-list__fly-button" title="Существующие связи">
+                                                        <i class="icon icon-align-justify"></i>
+                                                    </button>
+                                                </div>
+                                            </li>
+                                        </ul>
                                     </li>
                                 </ul>
                             </li>
                             <li class="category-list__item">
-                                <button class="button button--circle category-list__button button--small button--green">
-                                    +
-                                </button>
-                                <span class="category-list__name">
-                                    Строительство
-                                </span>
+                                <div class="category-list__wrapper">
+                                    <button class="button button--circle category-list__button button--small button--green">
+                                        <i class="icon icon-plus"></i>
+                                    </button>
+                                    <span class="category-list__name">
+                                        Строительство
+                                    </span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="validator cats-validator__item">
+                    <div class="validator__title-block">
+                        <h3 class="validator__title">Локальные категории</h3>
+                        <div class="validator__search search-box">
+                            <input type="text" class="search-box__input" placeholder="Поиск">
+                            <button type="button" class="search-box__fly-button">
+                                <i class="icon icon-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="validator__body">
+                        <ul class="category-list validator-categories">
+                            <li class="category-list__item">
+                                <div class="category-list__wrapper">
+                                    <button class="category-list__button button button--small button--outline">
+                                        <i class="icon icon-minus"></i>
+                                    </button>
+                                    <span class="category-list__name">
+                                        Строительство и ремонт
+                                    </span>
+                                </div>
+                                <ul class="category-list category-list__sub-menu category-list__sub-menu--second">
+                                    <li class="category-list__item">
+                                        <div class="category-list__wrapper ">
+                                            <button class="button button--circle category-list__button button--small button--green">
+                                                <i class="icon icon-plus"></i>
+                                            </button>
+                                            <span class="category-list__name">
+                                                Кабельная продукция
+                                            </span>
+                                        </div>
+                                        <ul class="category-list category-list__sub-menu category-list__sub-menu--third">
+                                            <li class="category-list__item">
+                                                <div class="category-list__wrapper">
+                                                    <input type="checkbox" class="category-list__checker input" disabled>
+                                                    <span class="category-list__name">
+                                                        Плазмотроны
+                                                    </span>
+                                                    <button class="category-list__fly-button" title="Существующие связи">
+                                                        <i class="icon icon-align-justify"></i>
+                                                    </button>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="category-list__item">
+                                <div class="category-list__wrapper">
+                                    <button class="button button--circle category-list__button button--small button--green">
+                                        <i class="icon icon-plus"></i>
+                                    </button>
+                                    <span class="category-list__name">
+                                        Строительство
+                                    </span>
+                                </div>
                             </li>
                         </ul>
                     </div>
