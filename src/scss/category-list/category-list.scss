@@ -30,7 +30,18 @@
         width: 22px;
         height: 22px;
         font-weight: 400;
-        padding: 0
+        padding: 0;
+        //font-family: 'icomoon' !important;
+
+        &::before {
+            content: '\e9bc';
+        }
+
+        &--open {
+            &::before {
+                content: '\e99f';
+            }
+        }
     }
 
     &__name {
@@ -53,9 +64,14 @@
         background: #ebebeb;
         border-bottom: 1px solid #ccc;
         padding-left: spacer(10);
+        display: none;
 
         &--third {
             border: none;
+        }
+
+        &--open {
+            display: block;
         }
     }
 }

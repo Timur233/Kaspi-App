@@ -37,3 +37,15 @@ ol,
 ul {
     list-style: none;
 }
+
+/* SVB RESET */
+#headerBlock,
+#headerBlock * {
+    box-sizing: initial;
+}
+
+#menuBlock,
+#menuBlock * {
+    box-sizing: initial;
+    //font: bold 12px Arial, Helvetica;
+}
