@@ -12,14 +12,50 @@ class CategoryValidator {
         this.search = '';
     }
 
+    static getMarketPlaces(callback) {
+        fetch('https://shop.ex-in.kz:5051/catalog/marketplaces', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                session:  'ca2d1638-78d0-4b31-8851-b5da85e5c38f',
+                action:   'select',
+                datatype: 'list',
+            }),
+        }).then(response => response.json())
+            .then(json => callback(json.data.list));
+    }
+
     static setTitle() {
         const block = document.createElement('div');
-        const title = document.createElement('h3');
 
-        title.classList = 'validator__title';
-        title.textContent = 'Локальные категории';
+        function title() {
+            let titleNode = {};
 
-        function setSearchBox() {
+            if (CategoryValidator.type === 'local') {
+                titleNode = document.createElement('h3');
+
+                titleNode.classList = 'validator__title';
+                titleNode.textContent = 'Локальные категории';
+            } else {
+                titleNode = CategoryValidator.getMarketPlaces((marketplaces) => {
+                    titleNode = document.createElement('select');
+                    marketplaces.forEach((market) => {
+                        const option = document.createElement('option');
+
+                        option.value = market.uuid.r;
+                        option.textContent = market.represent.r;
+                        titleNode.appendChild(option);
+                    });
+
+                    return titleNode;
+                });
+                console.log(titleNode);
+            }
+
+            return titleNode;
+        }
+
+        function searchBox() {
             const searchBlock = document.createElement('div');
             const button = document.createElement('button');
 
@@ -40,8 +76,8 @@ class CategoryValidator {
         }
 
         block.classList = 'validator__title-block';
-        block.appendChild(title);
-        block.appendChild(setSearchBox());
+        block.append(title());
+        block.appendChild(searchBox());
 
         return block;
     }
@@ -100,6 +136,16 @@ class CategoryValidator {
             subList.classList.toggle('category-list__sub-menu--open');
         }
 
+        function changeCheckBox() {
+            const checkedInput = block.querySelector('.category-list__checker:checked');
+
+            if (checkedInput) {
+                console.log(checkedInput);
+            } else {
+                console.log('Nea');
+            }
+        }
+
         function getCategoryItem(category) {
             const { uuid, title } = category;
 
@@ -133,6 +179,9 @@ class CategoryValidator {
                     checkBox.type = 'checkbox';
                     checkBox.classList = 'category-list__checker input';
                     checkBox.setAttribute('data-uuid', uuid);
+                    checkBox.addEventListener('click', () => {
+                        changeCheckBox();
+                    });
                     wrapper.prepend(checkBox);
 
                     detailsButton.classList = 'category-list__fly-button';
@@ -226,6 +275,10 @@ class CategoryValidator {
 //     return result;
 // }
 
-const test = new CategoryValidator(document.createElement('div'), 'default');
+const test = new CategoryValidator(document.createElement('div'), 'local');
 
 document.querySelector('.cats-validator__wrapper').appendChild(test.render());
+
+const test1 = new CategoryValidator(document.createElement('div'), 'marketplaces');
+
+document.querySelector('.cats-validator__wrapper').appendChild(test1.render());
