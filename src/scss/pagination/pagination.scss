@@ -1,0 +1,13 @@
+.pagination {
+    &__title {
+        @include font($font-normal, 1.2, 400);
+        display: block;
+        margin-top: spacer(3);
+        margin-bottom: spacer(3);
+    }
+}
+
+.pagination-list {
+    display: flex;
+    gap: spacer(1);
+}

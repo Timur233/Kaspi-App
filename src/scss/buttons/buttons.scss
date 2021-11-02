@@ -1,7 +1,7 @@
 .button {
-    @include font($font-middle, 24px);
+    @include font($font-normal, 24px);
 
-    padding: spacer(1) spacer(5);
+    padding: spacer(1) spacer(4);
     border-top: 2px;
     border-bottom: 2px;
     border-style: solid;
@@ -88,6 +88,15 @@
         }
     }
 
+    &--middle {
+        @include font($font-normal, 1.4, 400);
+
+        padding: spacer(1) spacer(3);
+        border-radius: softer(2);
+        border: 1px solid rgb($text-color, 0.1);
+        outline: none;
+    }
+
     &--small {
         @include font($font-normal, 1, 600);
 
@@ -95,5 +104,9 @@
         border-radius: softer(2);
         border: 1px solid rgb($text-color, 0.1);
         outline: none;
+    }
+
+    .icon{
+        font-weight: 600;
     }
 }

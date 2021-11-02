@@ -22,5 +22,9 @@
         font-size: $font-middle;
         background: none;
         cursor: pointer;
+
+        img {
+            width: 16px;
+        }
     }
 }
