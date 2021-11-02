@@ -1,0 +1,24 @@
+@import 'reset-product.scss';
+@import 'vars.scss';
+@import 'mixins.scss';
+@import 'forms/inputs.scss';
+@import 'buttons/buttons.scss';
+@import 'cats-validator/validator.scss';
+@import 'product-validator/validator.scss';
+@import 'category-list/category-list.scss';
+@import 'page-title/page-title.scss';
+@import 'search-box/search-box.scss';
+@import 'pagination/pagination.scss';
+@import 'preloader/preloader.scss';
+@import 'roboto/font.scss';
+@import 'iconmoon/font.scss';
+
+.product-validator {
+    font-family: 'Roboto', sans-serif;
+    color: $text-color;
+    font-size: $font-normal;
+}
+
+.product-validator * {
+    box-sizing: border-box;
+}
