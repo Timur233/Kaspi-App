@@ -100,13 +100,13 @@ const page = async () => {
             return res.data.list;
         };
 
-        const getFieldParams = async (categoryCode, field) => {
+        const getFieldParams = async (categoryUuid, field) => {
             const req = await fetch(`${config.ssl + config.host}/kaspi`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
                     type:              'getSpecificationValues',
-                    categoryCode,
+                    category_uuid:     categoryUuid,
                     specificationCode: field,
                 }),
             });
@@ -292,32 +292,54 @@ const page = async () => {
         };
 
         const getCategoryFromMap = async (supCatUuid) => {
-            const req = await fetch(`${config.ssl + config.host}/catalog/supplierourcategorymap`, {
+            if (supCatUuid) {
+                const req = await fetch(`${config.ssl + config.host}/catalog/supplierourcategorymap`, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({
+                        session: config.session,
+                        limit:   1,
+                        filters: {
+                            instance: [
+                                {
+                                    filter_order:   0,
+                                    preoperator:    'AND',
+                                    attribute_name: 'suppliercategory',
+                                    predicate:      '=',
+                                    value:          supCatUuid,
+                                    postoperator:   '',
+                                },
+                            ],
+                        },
+                        action:   'select',
+                        datatype: 'list',
+                    }),
+                });
+
+                const mapping = await req.json();
+
+                if (mapping.status !== 'Internal Server Error' && mapping.data.list[0]) return mapping.data.list[0];
+
+                return false;
+            }
+
+            return false;
+        };
+
+        const getMarvelInfo = async (code) => {
+            const req = await fetch(`${config.ssl + config.host}/marvel`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
-                    session: config.session,
-                    limit:   1,
-                    filters: {
-                        instance: [
-                            {
-                                filter_order:   0,
-                                preoperator:    'AND',
-                                attribute_name: 'suppliercategory',
-                                predicate:      '=',
-                                value:          supCatUuid,
-                                postoperator:   '',
-                            },
-                        ],
-                    },
-                    action:   'select',
-                    datatype: 'list',
+                    session:    config.session,
+                    type:       'getGoodsAdditionalInfo',
+                    goods_code: code,
                 }),
             });
 
-            const mapping = await req.json();
+            const res = await req.json();
 
-            if (mapping.status !== 'Internal Server Error' && mapping.data.list[0]) return mapping.data.list[0];
+            if (res.status === 200 && res.data.info.length > 0) return res.data;
 
             return false;
         };
@@ -332,6 +354,7 @@ const page = async () => {
             catMap:       getCategoryFromMap,
             fields:       getProductFields,
             params:       getFieldParams,
+            marvelInfo:   getMarvelInfo,
         };
     })();
 
@@ -527,14 +550,14 @@ const page = async () => {
                         paginationList.appendChild(button);
                     });
 
-                    paginationLabel.classList = 'pagination__title';
-                    paginationLabel.textContent = `Показано ${page * limit} элементов из ${config.countProducts}`;
-                    block.appendChild(paginationLabel);
-
                     paginationList.classList = 'pagination-list';
 
                     return paginationList;
                 }
+
+                paginationLabel.classList = 'pagination__title';
+                paginationLabel.textContent = `Показано ${config.page * 25} элементов из ${config.countProducts}`;
+                block.appendChild(paginationLabel);
 
                 block.appendChild(getPaginationList());
                 block.classList = 'pagination';
@@ -570,8 +593,30 @@ const page = async () => {
             title.textContent = data.represent.v;
             block.appendChild(title);
 
-            (function () {
+            (async function () {
                 const spec = document.createElement('div');
+                const diction = {
+                    url:                 'Ссылка',
+                    name:                'Название',
+                    sort:                'Сортировка',
+                    brand:               'Бренд',
+                    ishit:               'Хит',
+                    isnew:               'Новинка',
+                    images:              'Изображения',
+                    price1:              'Цена оптовая',
+                    price2:              'Диллерская',
+                    article:             'Артикул',
+                    barcode:             'Баркод',
+                    ispromo:             'Акция',
+                    category:            'ID Категории',
+                    quantity:            'Количество на складе',
+                    warranty:            'Гарантия',
+                    full_name:           'Полное название',
+                    article_pn:          'Артикул (Part number)',
+                    description:         'Описание',
+                    reducedprice:        'Снижена цена',
+                    expectedArrivalDate: 'Ожидаемая дата поступления',
+                };
 
                 spec.classList = 'product-spec product-info__spec';
                 spec.innerHTML = `
@@ -603,10 +648,65 @@ const page = async () => {
                         </span>
                     </div>
 
+                    <div class="product-spec__item">
+                        <span class="product-spec__title">
+                            Ссылка на товар:
+                        </span>
+                        <span class="product-spec__value">
+                            <a href="${data.url.v}" class="product-spec__arrow-button button button--small button--green" target="_blank">Перейти</a>
+                        </span>
+                    </div>
+
                 `;
+
+                function getAdditionalInfo(key, val) {
+                    spec.innerHTML += `
+                        <div class="product-spec__item">
+                            <span class="product-spec__title">
+                                ${key}:
+                            </span>
+                            <span class="product-spec__value">
+                                ${val}
+                            </span>
+                        </div>
+                    `;
+                }
+
+                async function getMarvelFields() {
+                    const marvelInfo = await model.marvelInfo(data.code.v);
+
+                    if (marvelInfo) {
+                        marvelInfo.info.forEach((field) => {
+                            getAdditionalInfo(field.represent, field.value);
+                        });
+
+                        if (marvelInfo.images && marvelInfo.images.length > 0) {
+                            const image = document.createElement('img');
+
+                            image.src = marvelInfo.images[0];
+                            image.classList = 'product-info__image';
+                            block.prepend(image);
+                        }
+                    }
+
+                    spec.querySelector('.preloader-img').remove();
+                }
+
+                if (data.additionalinfo.v !== '') {
+                    for (const [key, val] of Object.entries(data.additionalinfo.v)) {
+                        if (key !== 'images' && key !== 'url') getAdditionalInfo(diction[key], val);
+                    }
+                } else {
+                    spec.innerHTML += `
+                        <img src="../img/spin-dark.svg" class="preloader-img"/>
+                    `;
+                    getMarvelFields();
+                }
 
                 block.appendChild(spec);
             }());
+
+            console.log(data);
 
             block.classList = 'product-info';
 
@@ -614,7 +714,6 @@ const page = async () => {
         };
 
         const productEditor = async (data) => {
-            console.log('productEditor');
             const block = document.createElement('div');
             const title = document.createElement('div');
             const category = document.createElement('div');
@@ -630,7 +729,17 @@ const page = async () => {
             `;
             block.appendChild(title);
 
-            async function getFields(categoryUuid, categoryCode) {
+            async function autoCompliteCat(catInput) {
+                const catMap = await model.catMap(data.category.v);
+
+                if (catMap) {
+                    catInput.value = catMap.represent.r;
+                    catInput.setAttribute('data-uuid', catMap.ourcategory.v);
+                    getFields(catMap.ourcategory.v);
+                }
+            }
+
+            async function getFields(categoryUuid) {
                 const fields = await model.fields(categoryUuid);
 
                 productParams.classList = 'product-params product-editor__params';
@@ -646,7 +755,7 @@ const page = async () => {
                     let value = {};
 
                     async function getFieldSelect() {
-                        const params = await model.params(categoryCode, field.code.v);
+                        const params = await model.params(categoryUuid, field.code.v);
                         const select = document.createElement('select');
 
                         if (field.multivalued.v) {
@@ -755,7 +864,7 @@ const page = async () => {
                             input.value = li.textContent;
                             input.setAttribute('data-uuid', li.getAttribute('data-uuid'));
                             dropdown.style.display = 'none';
-                            getFields(el.uuid.v, el.code.v);
+                            getFields(el.uuid.v);
                         });
 
                         dropdown.appendChild(li);
@@ -776,14 +885,9 @@ const page = async () => {
 
                 category.appendChild(input);
                 category.appendChild(dropdown);
-            }
 
-            async function renderCategorySelect() {
-                const catMap = await model.catMap(data.category.v);
-
-                console.log(catMap);
+                await autoCompliteCat(input);
             }
-            await renderCategorySelect();
 
             category.classList = 'category-edit product-editor__category';
             category.innerHTML = `

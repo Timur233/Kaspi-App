@@ -1,0 +1,72 @@
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Product</title>
+    <link rel="stylesheet" href="../src/css/svb.css">
+</head>
+<body>
+    <div id="wrapper">
+        <header>
+            <div id="headerBlock">
+                <div id="headerLogoBlock" class="headerElement">
+                    <img src="img/logo.png " alt="logo " width="30" height="30">
+                </div>
+                <div id="headerTitleBlock" class="headerElement">
+                    Asi Mart
+                </div>
+                <div id="headerHelloBlock" class="headerElement">
+                    <div><button id="exinCrmHello" class="exinButton exinCrmHelloButton">
+        <span>☰</span>
+    </button><div id="exinCrmHelloMenu" class="hidden">
+                <form method="post" id="logout" action="https://shop.ex-in.kz:5051/signin">
+                    <input type="hidden" name="login" value="1">
+                    <input type="submit" value="Вход" class="exinButton userMenuButton">
+                </form>
+            </div></div>
+                </div>
+            </div>
+            <div id="menuBlock">
+                <div id="menu_administrator">
+                <ul>
+                    <li class="menuItemLvl2" value=""><a class="menuItemRef ">Администрирование</a>
+                        <ul>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=mdeditor">Редактор метаданных</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=vieweditor">Редактор представлений</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=s&amp;n=users&amp;dt=l&amp;a=g">Пользователи</a></li>
+                        </ul>
+                    </li>
+                    <li class="menuItemLvl2" value=""><a class="menuItemRef ">Каталоги</a>
+                        <ul>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=c&amp;n=measures&amp;dt=l&amp;a=g">Единицы измерения</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=c&amp;n=organizations&amp;dt=l&amp;a=g">Организации</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=c&amp;n=categories&amp;dt=l&amp;a=g">Категории (собственные)</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=c&amp;n=goods&amp;dt=l&amp;a=g">Товары (собственные)</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=c&amp;n=suppliers&amp;dt=l&amp;a=g">Поставщики</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=c&amp;n=suppliercategories&amp;dt=l&amp;a=g">Категории поставщиков</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=c&amp;n=suppliergoods&amp;dt=l&amp;a=g">Товары поставщиков</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=c&amp;n=marketplaces&amp;dt=l&amp;a=g">Торговые площадки</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=c&amp;n=marketplacecategories&amp;dt=l&amp;a=g">Категории торговых площадок</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=c&amp;n=marketplacegoods&amp;dt=l&amp;a=g">Товары торговых площадок</a></li>
+                        </ul>
+                    </li>
+                    <li class="menuItemLvl2" value=""><a class="menuItemRef ">Документы</a>
+                        <ul>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=d&amp;n=supplierprices&amp;dt=l&amp;a=g">Прайсы поставщиков</a></li>
+                            <li class="menuItemLvl3" value=""><a href="https://shop.ex-in.kz:5051?item=svb&amp;t=d&amp;n=marketplaceprices&amp;dt=l&amp;a=g">Прайсы для торговых площадок</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            </div>
+        </header>
+        <section class="cats-validator">
+            <h3 class="cats-validator__title page-title">Сопостовление категорий</h3>
+            <div class="cats-validator__wrapper">
+            </div>
+        </section>
+    </div>
+</body>
+<script type="module" src="../src/js/newproduct.js"></script>
+</html>
