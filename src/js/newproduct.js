@@ -10,7 +10,4 @@ const config = {
     page:          1,
 };
 
-console.log(catDom());
-document.body.addEventListener('click', () => {
-    console.log(catParams);
-});
+document.body.querySelector('.products-formatter').appendChild(catDom());
