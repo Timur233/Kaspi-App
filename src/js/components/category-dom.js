@@ -8,8 +8,8 @@ const params = {
 
 const config = {
     ssl:     'https://',
-    host:    'shop.ex-in.kz:5051',
-    session: 'ca2d1638-78d0-4b31-8851-b5da85e5c38f',
+    host:    'harp.ex-in.kz', // 'shop.ex-in.kz:5051'
+    session: 'af7c03b3-5819-4a5d-a6fe-c1a34a0bf78f',
 };
 
 const model = (() => {
@@ -27,7 +27,7 @@ const model = (() => {
         return req;
     };
 
-    const getCategoryList = async (supplierUuid, page = 1, query = '') => {
+    const getCategoryList = async (supplierUuid, page = 1, query = localStorage.getItem('categorySearchQuery')) => {
         const filter = [];
 
         filter.push({
@@ -89,13 +89,37 @@ const render = () => {
 
     localStorage.setItem('categoryPaginatorPage', 1);
 
-    const blockBody = (supplierUuid) => {
-        const categories = model.categories(supplierUuid);
-        const renderCategotyList = (data) => {
-            const categoryListBlock = document.createElement('div');
-            const categoryListUl = document.createElement('ul');
+    const productsBlock = (categoryUuid) => {
 
+    };
+
+    const categoriesBlock = (supplierUuid) => {
+        const categories = model.categories(supplierUuid);
+        const categoryListBlock = document.createElement('div');
+        const categoryListUl = document.createElement('ul');
+        const paginatorEl = document.createElement('div');
+
+        const renderStaticEl = ((data) => {
+            categoryListBlock.appendChild(searchBox('category', (query) => {
+                const categoriesSearch = model.categories(supplierUuid, 1, query);
+
+                localStorage.setItem('categoryPaginatorPage', 1);
+                localStorage.setItem('categorySearchQuery', query);
+
+                categoriesSearch
+                    .then(res => res.json())
+                    .then((res) => {
+                        if (res !== undefined && res.status !== 'Internal Server Error') {
+                            renderDynamicEl(res.data);
+                        }
+                    })
+                    .catch(err => console.log(`Ошибка подключения к серверу.${err}`));
+            }));
+        })();
+
+        const renderDynamicEl = (data) => {
             categoryListUl.classList = 'category-list';
+            categoryListUl.innerHTML = '';
             data.list.forEach((category) => {
                 const categoryListLi = document.createElement('li');
 
@@ -109,28 +133,9 @@ const render = () => {
                 categoryListUl.appendChild(categoryListLi);
             });
 
-            categoryListBlock.appendChild(searchBox('category', (query) => {
-                const categoriesSearch = model.categories(supplierUuid, 1, query);
-
-                localStorage.setItem('categoryPaginatorPage', 1);
-                localStorage.setItem('categorySearchQuery', query);
-
-                categoriesSearch
-                    .then(res => res.json())
-                    .then((res) => {
-                        if (res !== undefined && res.status !== 'Internal Server Error') {
-                            renderCategotyList(res.data);
-                        }
-                    })
-                    .catch(err => console.log(`Ошибка подключения к серверу.${err}`));
-
-                bodyBlock.innerHTML = '';
-                component.appendChild(bodyBlock);
-            }));
-
-            categoryListBlock.appendChild(categoryListUl);
-
-            categoryListBlock.appendChild(paginator(data.count, 'category', (page) => {
+            paginatorEl.innerHTML = '';
+            paginatorEl.classList = 'category-paginator';
+            paginatorEl.appendChild(paginator(data.count, 'category', (page) => {
                 const categoriesForPage = model.categories(supplierUuid, page);
 
                 localStorage.setItem('categoryPaginatorPage', page);
@@ -139,26 +144,26 @@ const render = () => {
                     .then(res => res.json())
                     .then((res) => {
                         if (res !== undefined && res.status !== 'Internal Server Error') {
-                            renderCategotyList(res.data);
+                            renderDynamicEl(res.data);
                         }
                     })
                     .catch(err => console.log(`Ошибка подключения к серверу.${err}`));
-
-                bodyBlock.innerHTML = '';
-                component.appendChild(bodyBlock);
             }));
-
-            bodyBlock.appendChild(categoryListBlock);
         };
+
+        categoryListBlock.append(categoryListUl, paginatorEl);
 
         categories
             .then(res => res.json())
             .then((res) => {
-                if (res !== undefined && res.status !== 'Internal Server Error') renderCategotyList(res.data);
+                if (res !== undefined && res.status !== 'Internal Server Error') {
+                    renderDynamicEl(res.data);
+                }
             })
             .catch(err => console.log(`Ошибка подключения к серверу.${err}`));
 
         bodyBlock.innerHTML = '';
+        bodyBlock.appendChild(categoryListBlock);
         component.appendChild(bodyBlock);
     };
 
@@ -178,7 +183,8 @@ const render = () => {
 
             select.addEventListener('change', () => {
                 localStorage.setItem('categoryPaginatorPage', 1);
-                blockBody(select.value);
+                localStorage.setItem('categorySearchQuery', '');
+                categoriesBlock(select.value);
             });
 
             data.forEach((supplier) => {

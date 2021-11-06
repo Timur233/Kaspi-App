@@ -16,11 +16,14 @@ const render = (countItems, type, callback) => {
         function getPaginationNumbers() {
             const numbers = [];
 
-            if (page === 1) {
+            if (page === 1 && page !== lastPage) {
+                numbers.push({ title: page, value: page });
+
+                if (page + 1 <= lastPage) numbers.push({ title: page + 1, value: page + 1 });
+
+                if (page + 2 <= lastPage) numbers.push({ title: page + 2, value: page + 2 });
+
                 numbers.push(
-                    { title: page, value: page },
-                    { title: page + 1, value: page + 1 },
-                    { title: page + 2, value: page + 2 },
                     { title: '<i class="icon icon-chevron-right"></i>', value: page + 1 },
                     { title: lastPage, value: lastPage },
                 );
@@ -30,22 +33,31 @@ const render = (countItems, type, callback) => {
                 numbers.push(
                     { title: 1, value: 1 },
                     { title: '<i class="icon icon-chevron-left"></i>', value: page - 1 },
-                    { title: page - 1, value: page - 1 },
-                    { title: page, value: page },
-                    { title: page + 1, value: page + 1 },
+                );
+
+                if (page - 1 >= 1) numbers.push({ title: page - 1, value: page - 1 });
+
+                numbers.push({ title: page, value: page });
+
+                if (page + 1 <= lastPage) numbers.push({ title: page + 1, value: page + 1 });
+
+                numbers.push(
                     { title: '<i class="icon icon-chevron-right"></i>', value: page + 1 },
                     { title: lastPage, value: lastPage },
                 );
             }
 
-            if (page === lastPage) {
+            if (page === lastPage && page !== 1) {
                 numbers.push(
                     { title: 1, value: 1 },
                     { title: '<i class="icon icon-chevron-left"></i>', value: page - 1 },
-                    { title: page - 2, value: page - 2 },
-                    { title: page - 1, value: page - 1 },
-                    { title: page, value: page },
                 );
+
+                if (page - 2 >= 1) numbers.push({ title: page - 2, value: page - 2 });
+
+                if (page - 1 >= 1) numbers.push({ title: page - 1, value: page - 1 });
+
+                numbers.push({ title: page, value: page });
             }
 
             return numbers;

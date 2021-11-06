@@ -3,8 +3,8 @@ import { params as catParams, render as catDom } from './components/category-dom
 
 const config = {
     ssl:           'https://',
-    host:          'shop.ex-in.kz:5051',
-    session:       'ca2d1638-78d0-4b31-8851-b5da85e5c38f',
+    host:          'harp.ex-in.kz', // 'shop.ex-in.kz:5051'
+    session:       'af7c03b3-5819-4a5d-a6fe-c1a34a0bf78f',
     query:         '',
     countProducts: '',
     page:          1,
