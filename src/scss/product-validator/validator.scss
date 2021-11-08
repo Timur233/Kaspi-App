@@ -81,7 +81,7 @@
     flex: 0 0 calc(65% - 16px);
 }
 
-.category-edit {
+.category-edit, .brand-edit {
     margin-bottom: spacer(5);
     position: relative;
     &__label {
@@ -204,6 +204,15 @@
         padding-left: spacer(2);
     }
 
+    &__suppliers-select {
+        background: none;
+        color: #fff;
+        outline: none;
+
+        >option {
+            color: $text-color;
+        }
+    }
 }
 
 .product-list {

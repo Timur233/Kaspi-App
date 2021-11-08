@@ -1,9 +1,11 @@
 import '../scss/main-product.scss';
+import { render as paginator } from './components/paginator';
 
 const config = {
     ssl:           'https://',
-    host:          'shop.ex-in.kz:5051',
-    session:       'ca2d1638-78d0-4b31-8851-b5da85e5c38f',
+    host:          'harp.ex-in.kz',
+    session:       'e311661c-2b1e-44c8-92d6-e9af46c5118e',
+    supplierUuid:  '',
     query:         '',
     countProducts: '',
     page:          1,
@@ -16,7 +18,7 @@ const page = async () => {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
-                    session:       config.session,
+                    ASM_session:   config.session,
                     action:        'select',
                     datatype:      'instance',
                     instance_uuid: uuid,
@@ -55,9 +57,9 @@ const page = async () => {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
-                    session: config.session,
-                    limit:   1000000,
-                    filters: {
+                    ASM_session: config.session,
+                    limit:       1000000,
+                    filters:     {
                         instance: filter,
                     },
                     search:   title,
@@ -71,14 +73,32 @@ const page = async () => {
             return res.data.list;
         };
 
+        const getBrandsForTitle = async (title = '') => {
+            const req = await fetch(`${config.ssl + config.host}/catalog/brands`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    ASM_session: config.session,
+                    limit:       1000000,
+                    search:      title,
+                    action:      'select',
+                    datatype:    'list',
+                }),
+            });
+
+            const res = await req.json();
+
+            return res.data.list;
+        };
+
         const getProductFields = async (category) => {
             const req = await fetch(`${config.ssl + config.host}/catalog/categoryspecifications`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
-                    session: config.session,
-                    limit:   1000000,
-                    filters: {
+                    ASM_session: config.session,
+                    limit:       1000000,
+                    filters:     {
                         instance: [
                             {
                                 filter_order:   0,
@@ -105,6 +125,7 @@ const page = async () => {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
+                    ASM_session:       config.session,
                     type:              'getSpecificationValues',
                     category_uuid:     categoryUuid,
                     specificationCode: field,
@@ -116,7 +137,7 @@ const page = async () => {
             return res.data;
         };
 
-        const getSupProducts = async (query = '') => {
+        const getSupProducts = async (query = config.query) => {
             const filter = [];
 
             if (query !== '') {
@@ -138,14 +159,25 @@ const page = async () => {
                 });
             }
 
+            if (config.supplierUuid !== '') {
+                filter.push({
+                    filter_order:   0,
+                    preoperator:    'AND',
+                    attribute_name: 'supplier',
+                    predicate:      '=',
+                    value:          config.supplierUuid,
+                    postoperator:   '',
+                });
+            }
+
             const req = await fetch(`${config.ssl + config.host}/catalog/suppliergoods`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
-                    session: config.session,
-                    limit:   25,
-                    page:    query ? '' : config.page,
-                    filters: {
+                    ASM_session: config.session,
+                    limit:       25,
+                    page:        config.page,
+                    filters:     {
                         instance: filter,
                     },
                     // search:   query !== '' ? query : '',
@@ -167,9 +199,9 @@ const page = async () => {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
-                    session: config.session,
-                    limit:   25,
-                    filters: {
+                    ASM_session: config.session,
+                    limit:       25,
+                    filters:     {
                         instance: [],
                     },
                     search:   query,
@@ -189,12 +221,12 @@ const page = async () => {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body:    JSON.stringify({
-                        session:  config.session,
-                        type:     'catalog',
-                        name:     'goodsspecifications',
-                        datatype: 'instance',
-                        action:   'insert',
-                        data:     {
+                        ASM_session: config.session,
+                        type:        'catalog',
+                        name:        'goodsspecifications',
+                        datatype:    'instance',
+                        action:      'insert',
+                        data:        {
                             instance: {
                                 represent:     field.represent,
                                 value:         field.value,
@@ -218,7 +250,7 @@ const page = async () => {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
-                    session:       config.session,
+                    ASM_session:   config.session,
                     type:          'catalog',
                     name:          'suppliergoods',
                     datatype:      'instance',
@@ -244,12 +276,12 @@ const page = async () => {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
-                    session:  config.session,
-                    type:     'catalog',
-                    name:     'goods',
-                    datatype: 'instance',
-                    action:   'insert',
-                    data:     {
+                    ASM_session: config.session,
+                    type:        'catalog',
+                    name:        'goods',
+                    datatype:    'instance',
+                    action:      'insert',
+                    data:        {
                         instance: {
                             represent: title,
                             category,
@@ -297,9 +329,9 @@ const page = async () => {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body:    JSON.stringify({
-                        session: config.session,
-                        limit:   1,
-                        filters: {
+                        ASM_session: config.session,
+                        limit:       1,
+                        filters:     {
                             instance: [
                                 {
                                     filter_order:   0,
@@ -331,9 +363,9 @@ const page = async () => {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
-                    session:    config.session,
-                    type:       'getGoodsAdditionalInfo',
-                    goods_code: code,
+                    ASM_session: config.session,
+                    type:        'getGoodsAdditionalInfo',
+                    goods_code:  code,
                 }),
             });
 
@@ -344,6 +376,22 @@ const page = async () => {
             return false;
         };
 
+        const getSuppliersList = async () => {
+            const req = await fetch(`${config.ssl + config.host}/catalog/suppliers`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    ASM_session: config.session,
+                    action:      'select',
+                    datatype:    'list',
+                }),
+            });
+
+            const res = await req.json();
+
+            return res.data.list;
+        };
+
         return {
             product:      getProductInfo,
             productList:  getSupProducts,
@@ -351,10 +399,12 @@ const page = async () => {
             newProduct:   saveNewProduct,
             saveProduct:  saveChange,
             findCategory: getCategoriesForTitle,
+            findBrand:    getBrandsForTitle,
             catMap:       getCategoryFromMap,
             fields:       getProductFields,
             params:       getFieldParams,
             marvelInfo:   getMarvelInfo,
+            suppliers:    getSuppliersList,
         };
     })();
 
@@ -363,15 +413,45 @@ const page = async () => {
             const block = document.createElement('div');
             const listBlock = document.createElement('div');
             const products = await model.productList();
+            const paginatorEl = document.createElement('div');
 
-            function renderTitle() {
+            async function renderTitle() {
                 const titleBlock = document.createElement('div');
 
-                function title() {
-                    const titleNode = document.createElement('h3');
+                async function title() {
+                    const titleNode = document.createElement('select');
+                    const suppliers = await model.suppliers();
 
-                    titleNode.classList = 'product-list-block__title';
-                    titleNode.textContent = 'Выбрать товар:';
+                    titleNode.classList = 'product-list-block__suppliers-select';
+                    titleNode.innerHTML = '<option value="">Все поставщики</option>';
+
+                    suppliers.forEach((supplier) => {
+                        const option = document.createElement('option');
+
+                        option.value = supplier.uuid.v;
+                        option.textContent = supplier.represent.r;
+
+                        if (config.supplierUuid !== '') {
+                            option.selected = 'selected';
+                        }
+
+                        titleNode.appendChild(option);
+                    });
+
+                    titleNode.addEventListener('change', async () => {
+                        let filteredProducts = [];
+
+                        config.supplierUuid = titleNode.value;
+                        config.page = 1;
+                        localStorage.setItem('productPaginatorPage', 1);
+
+                        filteredProducts = await model.productList();
+
+                        listBlock.innerHTML = '';
+                        listBlock.appendChild(renderList(filteredProducts));
+
+                        renderPaginator();
+                    });
 
                     return titleNode;
                 }
@@ -402,6 +482,10 @@ const page = async () => {
                         listBlock.innerHTML = '';
                         listBlock.appendChild(renderList(products));
 
+                        config.page = 1;
+                        localStorage.setItem('productPaginatorPage', 1);
+                        renderPaginator();
+
                         button.innerHTML = '<i class="icon icon-search"></i>';
                     }
 
@@ -414,7 +498,7 @@ const page = async () => {
 
                 titleBlock.classList = 'product-list-block__title-block';
 
-                titleBlock.appendChild(title());
+                titleBlock.appendChild(await title());
                 titleBlock.appendChild(searchBox());
 
                 return titleBlock;
@@ -442,6 +526,7 @@ const page = async () => {
                         <h4 class="product-list__title" title="${product.represent.r}">${product.represent.r}</h4>
                         <ul class="product-list__desc">
                             <li>${product.supplier.r}</li>
+                            <li>${product.category.r}</li>
                         </ul>
                     `;
 
@@ -482,7 +567,7 @@ const page = async () => {
                 return list;
             }
 
-            function renderPaginator() {
+            function renderPaginator1() {
                 const block = document.createElement('div');
                 const paginationLabel = document.createElement('span');
 
@@ -565,7 +650,28 @@ const page = async () => {
                 return block;
             }
 
-            block.appendChild(renderTitle());
+            function renderPaginator() {
+                paginatorEl.innerHTML = '';
+                paginatorEl.appendChild(paginator(
+                    config.countProducts,
+                    'product',
+                    async (page) => {
+                        let pageProducts = [];
+
+                        config.page = page;
+                        pageProducts = await model.productList();
+                        localStorage.setItem('productPaginatorPage', page);
+
+                        listBlock.innerHTML = '';
+                        listBlock.appendChild(renderList(pageProducts));
+                        renderPaginator();
+                    },
+                ));
+
+                return paginatorEl;
+            }
+
+            block.appendChild(await renderTitle());
 
             listBlock.classList = 'product-list';
             listBlock.appendChild(renderList(products));
@@ -573,7 +679,8 @@ const page = async () => {
             block.classList = 'product-list-block';
             block.appendChild(listBlock);
 
-            block.appendChild(renderPaginator());
+            renderPaginator();
+            block.appendChild(paginatorEl);
 
             return block;
         };
@@ -595,28 +702,6 @@ const page = async () => {
 
             (async function () {
                 const spec = document.createElement('div');
-                const diction = {
-                    url:                 'Ссылка',
-                    name:                'Название',
-                    sort:                'Сортировка',
-                    brand:               'Бренд',
-                    ishit:               'Хит',
-                    isnew:               'Новинка',
-                    images:              'Изображения',
-                    price1:              'Цена оптовая',
-                    price2:              'Диллерская',
-                    article:             'Артикул',
-                    barcode:             'Баркод',
-                    ispromo:             'Акция',
-                    category:            'ID Категории',
-                    quantity:            'Количество на складе',
-                    warranty:            'Гарантия',
-                    full_name:           'Полное название',
-                    article_pn:          'Артикул (Part number)',
-                    description:         'Описание',
-                    reducedprice:        'Снижена цена',
-                    expectedArrivalDate: 'Ожидаемая дата поступления',
-                };
 
                 spec.classList = 'product-spec product-info__spec';
                 spec.innerHTML = `
@@ -675,6 +760,8 @@ const page = async () => {
                 async function getMarvelFields() {
                     const marvelInfo = await model.marvelInfo(data.code.v);
 
+                    console.log(marvelInfo);
+
                     if (marvelInfo) {
                         marvelInfo.info.forEach((field) => {
                             getAdditionalInfo(field.represent, field.value);
@@ -692,10 +779,10 @@ const page = async () => {
                     spec.querySelector('.preloader-img').remove();
                 }
 
-                if (data.additionalinfo.v !== '') {
-                    for (const [key, val] of Object.entries(data.additionalinfo.v)) {
-                        if (key !== 'images' && key !== 'url') getAdditionalInfo(diction[key], val);
-                    }
+                if (data.additionalinfo.v.data.length > 0) {
+                    data.additionalinfo.v.data.forEach((field) => {
+                        getAdditionalInfo(field.represent, field.value);
+                    });
                 } else {
                     spec.innerHTML += `
                         <img src="../img/spin-dark.svg" class="preloader-img"/>
@@ -717,6 +804,7 @@ const page = async () => {
             const block = document.createElement('div');
             const title = document.createElement('div');
             const category = document.createElement('div');
+            const brand = document.createElement('div');
             const productParamTitle = document.createElement('div');
             const productParams = document.createElement('div');
             const saveButton = document.createElement('button');
@@ -827,6 +915,74 @@ const page = async () => {
 
                 const editor = document.querySelector('.product-editor');
             }
+
+            async function brandSelector() {
+                const input = document.createElement('input');
+                const dropdown = document.createElement('ul');
+
+                input.classList = 'title-edit__input input';
+                input.id = 'productBrand';
+                input.name = 'productBrand';
+                input.placeholder = 'Название категории';
+
+                dropdown.classList = 'brand-edit__dropdown';
+                dropdown.id = 'dropdownChild';
+
+                async function searchBrands(query) {
+                    const result = await model.findBrand(query.toLowerCase());
+                    const newBrandli = document.createElement('li');
+
+                    dropdown.style.display = 'block';
+                    dropdown.innerHTML = '';
+
+                    result.forEach((el) => {
+                        const li = document.createElement('li');
+
+                        li.textContent = el.represent.r;
+                        li.setAttribute('data-uuid', el.uuid.v);
+
+                        li.addEventListener('click', () => {
+                            input.value = li.textContent;
+                            input.setAttribute('data-uuid', li.getAttribute('data-uuid'));
+                            dropdown.style.display = 'none';
+                        });
+
+                        dropdown.appendChild(li);
+                    });
+
+                    newBrandli.classList = 'brand-edit__new-brand';
+                    newBrandli.innerHTML = '<i class="icon icon-plus"></i> Добавить новый бренд';
+
+                    newBrandli.addEventListener('click', () => {
+                        dropdown.style.display = 'none';
+                    });
+
+                    dropdown.appendChild(newBrandli);
+
+                    return result;
+                }
+
+                input.addEventListener('input', (e) => {
+                    if (input.value.length >= 3) {
+                        searchBrands(input.value);
+                    }
+
+                    if (input.value === '' || e.data === null) {
+                        input.setAttribute('data-uuid', '');
+                    }
+                });
+
+                brand.appendChild(input);
+                brand.appendChild(dropdown);
+            }
+
+            brand.classList = 'brand-edit product-editor__brand';
+            brand.innerHTML = `
+                <label class="brand-edit__label" for="productBrand">Выбрать бренд</label>
+            `;
+
+            block.appendChild(brand);
+            brandSelector();
 
             async function categorySelector() {
                 const input = document.createElement('input');
