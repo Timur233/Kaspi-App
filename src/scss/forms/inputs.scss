@@ -1,3 +1,13 @@
+.form-group {
+    display: block;
+    padding-bottom: spacer(3);
+
+    label {
+        display: block;
+        margin-bottom: spacer(2)
+    }
+}
+
 .input {
     @include font($font-normal, 1, 400);
 

@@ -1,0 +1,47 @@
+.main-modal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+
+    &__content {
+        position: relative;
+        background: #fff;
+        z-index: 10;
+        padding: spacer(5);
+        border-radius: 6px;
+        min-width: 320px;
+    }
+
+    &__buttons-group {
+        display: flex;
+        gap: spacer(3);
+    }
+
+    &__close-button {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        cursor: pointer;
+        background: none;
+
+        svg {
+            width: 15px;
+            height: 15px;
+        }
+    }
+
+    &__bg {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.479);
+    }
+}

@@ -1,101 +1,62 @@
-const render = (html, saveBtnLabel, cancelBtnLabel, callback) => {
-    const block = document.createElement('div');
-    const paginationLabel = document.createElement('span');
-    const config = {
-        countItems,
-        page: Number(localStorage.getItem(`${type}PaginatorPage`)),
-    };
+const render = (html, saveBtnLabel = 'Сохранить', cancelBtnLabel = 'Закрыть', callback) => {
+    const saveBtn = document.createElement('button');
+    const cancelBtn = document.createElement('button');
+    const wrapperHtml = document.createElement('div');
+    let closeBtn = {};
+    let buttonsGroup = {};
 
-    function getPaginationList() {
-        const paginationList = document.createElement('div');
-        const count = config.countItems;
-        const limit = 25;
-        const { page } = config;
-        const lastPage = Math.ceil(count / limit);
+    wrapperHtml.classList = 'main-modal';
+    wrapperHtml.innerHTML = `
+        <div class="main-modal__content">
+            <button class="main-modal__close-button">
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        d="M1 1L10 10M10 10L19 19M10 10L19 1M10 10L1 19"
+                        stroke="#333333"
+                        stroke-width="1.3"
+                    />
+                </svg>
+            </button>
+            ${html}
+            <div class="main-modal__buttons-group"></div>
+        </div>
+        <div class="main-modal__bg"></div>
+    `;
 
-        function getPaginationNumbers() {
-            const numbers = [];
-
-            if (page === 1 && page !== lastPage) {
-                numbers.push({ title: page, value: page });
-
-                if (page + 1 <= lastPage) numbers.push({ title: page + 1, value: page + 1 });
-
-                if (page + 2 <= lastPage) numbers.push({ title: page + 2, value: page + 2 });
-
-                numbers.push(
-                    { title: '<i class="icon icon-chevron-right"></i>', value: page + 1 },
-                    { title: lastPage, value: lastPage },
-                );
-            }
-
-            if (page > 1 && page < lastPage) {
-                numbers.push(
-                    { title: 1, value: 1 },
-                    { title: '<i class="icon icon-chevron-left"></i>', value: page - 1 },
-                );
-
-                if (page - 1 >= 1) numbers.push({ title: page - 1, value: page - 1 });
-
-                numbers.push({ title: page, value: page });
-
-                if (page + 1 <= lastPage) numbers.push({ title: page + 1, value: page + 1 });
-
-                numbers.push(
-                    { title: '<i class="icon icon-chevron-right"></i>', value: page + 1 },
-                    { title: lastPage, value: lastPage },
-                );
-            }
-
-            if (page === lastPage && page !== 1) {
-                numbers.push(
-                    { title: 1, value: 1 },
-                    { title: '<i class="icon icon-chevron-left"></i>', value: page - 1 },
-                );
-
-                if (page - 2 >= 1) numbers.push({ title: page - 2, value: page - 2 });
-
-                if (page - 1 >= 1) numbers.push({ title: page - 1, value: page - 1 });
-
-                numbers.push({ title: page, value: page });
-            }
-
-            return numbers;
-        }
-
-        getPaginationNumbers().forEach((item) => {
-            const button = document.createElement('button');
-
-            button.classList = 'pagination-list__item button button--middle button--green';
-
-            if (item.value === page) {
-                button.classList.add('button--outline');
-            } else {
-                button.addEventListener('click', () => {
-                    callback(item.value);
-                });
-            }
-
-            button.innerHTML = item.title;
-            button.setAttribute('data-value', item.value);
-            paginationList.appendChild(button);
-        });
-
-        paginationList.classList = 'pagination-list';
-
-        return paginationList;
+    function closeModal() {
+        wrapperHtml.remove();
     }
 
-    paginationLabel.classList = 'pagination__title';
-    paginationLabel.textContent = `
-        Показано ${config.page * 25} элементов из ${config.countItems}
-    `;
-    block.appendChild(paginationLabel);
+    buttonsGroup = wrapperHtml.querySelector('.main-modal__buttons-group');
 
-    block.appendChild(getPaginationList());
-    block.classList = 'pagination';
+    saveBtn.classList = 'button button--middle button--green';
+    saveBtn.textContent = saveBtnLabel;
+    saveBtn.addEventListener('click', () => {
+        callback(wrapperHtml);
+    });
 
-    return block;
+    buttonsGroup.appendChild(saveBtn);
+
+    cancelBtn.classList = 'button button--middle button--gray';
+    cancelBtn.textContent = cancelBtnLabel;
+    cancelBtn.addEventListener('click', () => {
+        closeModal();
+    });
+
+    closeBtn = wrapperHtml.querySelector('.main-modal__close-button');
+    closeBtn.addEventListener('click', () => {
+        closeModal();
+    });
+
+    buttonsGroup.appendChild(cancelBtn);
+
+    return wrapperHtml;
 };
 
 export {

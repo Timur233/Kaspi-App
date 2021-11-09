@@ -1,10 +1,11 @@
 import '../scss/main-product.scss';
 import { render as paginator } from './components/paginator';
+import { render as modal } from './components/modal';
 
 const config = {
     ssl:           'https://',
     host:          'harp.ex-in.kz',
-    session:       'e311661c-2b1e-44c8-92d6-e9af46c5118e',
+    session:       '8ff6d51e-e1b5-4235-91ad-9b022b69793c',
     supplierUuid:  '',
     query:         '',
     countProducts: '',
@@ -89,6 +90,33 @@ const page = async () => {
             const res = await req.json();
 
             return res.data.list;
+        };
+
+        const createNewBrand = async (title) => {
+            if (title !== '') {
+                const req = await fetch(`${config.ssl + config.host}/catalog/brands`, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({
+                        ASM_session: config.session,
+                        datatype:    'instance',
+                        name:        'brands',
+                        type:        'catalog',
+                        data:        {
+                            instance: {
+                                represent: title,
+                            },
+                        },
+                        action: 'insert',
+                    }),
+                });
+
+                const res = await req.json();
+
+                return res;
+            }
+
+            return false;
         };
 
         const getProductFields = async (category) => {
@@ -302,7 +330,7 @@ const page = async () => {
             console.log(res);
         };
 
-        const saveChange = async (title, category, fields, supplierProdData) => {
+        const saveChange = async (title, category, brand, fields, supplierProdData) => {
             const req = await fetch(`${config.ssl + config.host}/main/goods`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -311,9 +339,10 @@ const page = async () => {
                     code:                  supplierProdData.code.v,
                     name:                  title,
                     ourcategory_uuid:      category,
+                    brand_uuid:            brand,
                     suppliergoods_uuid:    supplierProdData.uuid.v,
                     suppliercategory_uuid: supplierProdData.category.v,
-                    session_uuid:          config.session,
+                    ASM_session:           config.session,
                     specifications:        fields,
                 }),
             });
@@ -400,6 +429,7 @@ const page = async () => {
             saveProduct:  saveChange,
             findCategory: getCategoriesForTitle,
             findBrand:    getBrandsForTitle,
+            newBrand:     createNewBrand,
             catMap:       getCategoryFromMap,
             fields:       getProductFields,
             params:       getFieldParams,
@@ -923,7 +953,7 @@ const page = async () => {
                 input.classList = 'title-edit__input input';
                 input.id = 'productBrand';
                 input.name = 'productBrand';
-                input.placeholder = 'Название категории';
+                input.placeholder = 'Название бренда';
 
                 dropdown.classList = 'brand-edit__dropdown';
                 dropdown.id = 'dropdownChild';
@@ -955,6 +985,35 @@ const page = async () => {
 
                     newBrandli.addEventListener('click', () => {
                         dropdown.style.display = 'none';
+                        document.querySelector('.product-validator').appendChild(modal(
+                            `
+                                <form class="creiate-brand">
+                                    <div class="form-group">
+                                        <label for="brandName">Название бренда</label>
+                                        <input
+                                            id="brandName"
+                                            class="input"
+                                            placeholder="Название бренда"
+                                            value="${input.value}"
+                                        />
+                                    </div>
+                                </form>
+                            `,
+                            'Отправить',
+                            'Отмена',
+                            async (modalContent) => {
+                                const brandTitleValue = modalContent.querySelector('#brandName');
+                                const brandData = await model.newBrand(brandTitleValue.value);
+
+                                if (!brandData.status && brandData.status !== 'Internal Server Error') {
+                                    input.setAttribute('data-uuid', brandData.data.uuid);
+                                    input.value = brandTitleValue.value;
+                                    modalContent.remove();
+                                } else {
+                                    alert('Не удалось создать бренд');
+                                }
+                            },
+                        ));
                     });
 
                     dropdown.appendChild(newBrandli);
@@ -963,7 +1022,7 @@ const page = async () => {
                 }
 
                 input.addEventListener('input', (e) => {
-                    if (input.value.length >= 3) {
+                    if (input.value.length >= 2) {
                         searchBrands(input.value);
                     }
 
@@ -1060,15 +1119,20 @@ const page = async () => {
             async function collectFormData() {
                 const title = document.getElementById('productTitle');
                 const category = document.getElementById('productCategory');
+                const brand = document.getElementById('productBrand');
                 const fields = [];
                 let error = false;
 
-                if (title.value !== '' && category.getAttribute('data-uuid') !== null) {
+                if (title.value !== ''
+                    && category.getAttribute('data-uuid') !== null
+                    && brand.getAttribute('data-uuid') !== null
+                ) {
                     const params = document.querySelector('.product-params');
                     const filedNodes = params.querySelectorAll('input ,select');
 
                     title.style.border = '';
                     category.style.border = '';
+                    brand.style.border = '';
 
                     filedNodes.forEach((field) => {
                         function checkField(val, uuid, field) {
@@ -1110,16 +1174,20 @@ const page = async () => {
                                     checkField(field.value, field.getAttribute('data-uuid'), field);
                                     break;
                                 case true:
-                                    let list = '';
+                                    const list = [];
 
                                     selectedOptions = field.querySelectorAll('option');
                                     selectedOptions.forEach((opt) => {
                                         if (opt.selected) {
-                                            list += `${opt.value}, `;
+                                            list.push(opt.value);
                                         }
                                     });
 
-                                    checkField(list, field.getAttribute('data-uuid'), field);
+                                    checkField(
+                                        list.length === 1 ? list[0] : JSON.stringify(list),
+                                        field.getAttribute('data-uuid'),
+                                        field,
+                                    );
                                     break;
                                 default:
                                     checkField(field.value, field.getAttribute('data-uuid'), field);
@@ -1132,6 +1200,7 @@ const page = async () => {
                         const saveRequest = await model.saveProduct(
                             title.value,
                             category.getAttribute('data-uuid'),
+                            brand.getAttribute('data-uuid'),
                             fields,
                             data,
                         );
@@ -1145,6 +1214,10 @@ const page = async () => {
 
                     if (category.getAttribute('data-uuid') === null) {
                         category.style.border = '1px solid red';
+                    }
+
+                    if (brand.getAttribute('data-uuid') === null) {
+                        brand.style.border = '1px solid red';
                     }
                 }
             }
@@ -1160,7 +1233,7 @@ const page = async () => {
                         nextProduct.dispatchEvent(click);
                     }
                 } else {
-                    alert('Ошибка! Попробуйте позднее.');
+                    alert('Ошибка! Не заполнены обязательные поля.');
                 }
             }
 
