@@ -165,6 +165,22 @@ const page = async () => {
             return res.data;
         };
 
+        const getProductFieldsValue = async (uuid) => {
+            const req = await fetch(`${config.ssl + config.host}/main/goods`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    ASM_session: config.session,
+                    action:      'getOur',
+                    goods_uuid:  uuid,
+                }),
+            });
+
+            const res = await req.json();
+
+            return res.data.goods;
+        };
+
         const getSupProducts = async (query = config.query) => {
             const filter = [];
 
@@ -268,8 +284,6 @@ const page = async () => {
                 });
 
                 const res = await req.json();
-
-                console.log(res);
             });
         };
 
@@ -295,8 +309,6 @@ const page = async () => {
             });
 
             const res = await req.json();
-
-            console.log(res);
         };
 
         const saveNewProduct = async (title, category, fields, supplierProdData) => {
@@ -326,8 +338,24 @@ const page = async () => {
 
             await connSuppProdNNew(res.data.uuid, supplierProdData.uuid.v);
             await saveProductFields(res.data.uuid, fields);
+        };
 
-            console.log(res);
+        const searchProductsByParams = async (category, brand, fields) => {
+            const req = await fetch(`${config.ssl + config.host}/main/goods`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    action:           'checkExistence',
+                    ourcategory_uuid: category,
+                    brand_uuid:       brand,
+                    ASM_session:      config.session,
+                    specifications:   fields,
+                }),
+            });
+
+            const res = await req.json();
+
+            return res;
         };
 
         const saveChange = async (title, category, brand, fields, supplierProdData) => {
@@ -422,19 +450,22 @@ const page = async () => {
         };
 
         return {
-            product:      getProductInfo,
-            productList:  getSupProducts,
-            findProduct:  findProducts,
-            newProduct:   saveNewProduct,
-            saveProduct:  saveChange,
-            findCategory: getCategoriesForTitle,
-            findBrand:    getBrandsForTitle,
-            newBrand:     createNewBrand,
-            catMap:       getCategoryFromMap,
-            fields:       getProductFields,
-            params:       getFieldParams,
-            marvelInfo:   getMarvelInfo,
-            suppliers:    getSuppliersList,
+            product:            getProductInfo,
+            productList:        getSupProducts,
+            productFieldsValue: getProductFieldsValue,
+            findProduct:        findProducts,
+            newProduct:         saveNewProduct,
+            connectProducts:    connSuppProdNNew,
+            saveProduct:        saveChange,
+            searchByParams:     searchProductsByParams,
+            findCategory:       getCategoriesForTitle,
+            findBrand:          getBrandsForTitle,
+            newBrand:           createNewBrand,
+            catMap:             getCategoryFromMap,
+            fields:             getProductFields,
+            params:             getFieldParams,
+            marvelInfo:         getMarvelInfo,
+            suppliers:          getSuppliersList,
         };
     })();
 
@@ -790,8 +821,6 @@ const page = async () => {
                 async function getMarvelFields() {
                     const marvelInfo = await model.marvelInfo(data.code.v);
 
-                    console.log(marvelInfo);
-
                     if (marvelInfo) {
                         marvelInfo.info.forEach((field) => {
                             getAdditionalInfo(field.represent, field.value);
@@ -823,8 +852,6 @@ const page = async () => {
                 block.appendChild(spec);
             }());
 
-            console.log(data);
-
             block.classList = 'product-info';
 
             return block;
@@ -838,6 +865,7 @@ const page = async () => {
             const productParamTitle = document.createElement('div');
             const productParams = document.createElement('div');
             const saveButton = document.createElement('button');
+            const searchSimilarProductsBlock = document.createElement('div');
 
             title.classList = 'title-edit product-editor__title';
             title.innerHTML = `
@@ -855,6 +883,167 @@ const page = async () => {
                     catInput.setAttribute('data-uuid', catMap.ourcategory.v);
                     getFields(catMap.ourcategory.v);
                 }
+            }
+
+            function collectFieldsData() {
+                const categoryInput = document.getElementById('productCategory');
+                const brandInput = document.getElementById('productBrand');
+                const params = document.querySelector('.product-params');
+                const filedNodes = params.querySelectorAll('input ,select');
+                const formFields = [];
+
+                if (title.value !== ''
+                    && categoryInput.getAttribute('data-uuid') !== null
+                    && brandInput.getAttribute('data-uuid') !== null
+                ) {
+                    filedNodes.forEach((field) => {
+                        function checkField(val, uuid) {
+                            if (val !== '' && val !== 'Выбрать значение') {
+                                formFields.push({ uuid, value: val });
+                            }
+                        }
+
+                        if (field.nodeName === 'INPUT') {
+                            switch (field.type) {
+                                case 'number':
+                                    checkField(field.value, field.getAttribute('data-uuid'));
+                                    break;
+                                case 'text':
+                                    checkField(field.value, field.getAttribute('data-uuid'));
+                                    break;
+                                case 'checkbox':
+                                    if (field.checked) {
+                                        checkField(true, field.getAttribute('data-uuid'));
+                                    } else {
+                                        checkField(false, field.getAttribute('data-uuid'));
+                                    }
+
+                                    break;
+                                default:
+                                    checkField(field.value, field.getAttribute('data-uuid'));
+                                    break;
+                            }
+                        }
+
+                        if (field.nodeName === 'SELECT') {
+                            let selectedOptions = {};
+
+                            switch (field.multiple) {
+                                case false:
+                                    checkField(field.value, field.getAttribute('data-uuid'));
+                                    break;
+                                case true:
+                                    const list = [];
+
+                                    selectedOptions = field.querySelectorAll('option');
+                                    selectedOptions.forEach((opt) => {
+                                        if (opt.selected) {
+                                            list.push(opt.value);
+                                        }
+                                    });
+
+                                    checkField(
+                                        list.length === 1 ? list[0] : JSON.stringify(list),
+                                        field.getAttribute('data-uuid'),
+                                        field,
+                                    );
+                                    break;
+                                default:
+                                    checkField(field.value, field.getAttribute('data-uuid'), field);
+                                    break;
+                            }
+                        }
+                    });
+
+                    return {
+                        category: categoryInput.getAttribute('data-uuid'),
+                        brand:    brandInput.getAttribute('data-uuid'),
+                        fields:   formFields,
+                    };
+                }
+
+                return false;
+            }
+
+            async function renderSimilarItems(foundItems) {
+                const itemsUl = document.createElement('ul');
+
+                foundItems.forEach((item) => {
+                    const itemsLi = document.createElement('li');
+                    const itemButtons = document.createElement('div');
+                    const watchButton = document.createElement('button');
+                    const linkButton = document.createElement('button');
+
+                    watchButton.classList = 'button button--small button--white';
+                    watchButton.innerHTML = `
+                        <i class="icon icon-eye"></i>
+                    `;
+                    watchButton.addEventListener('click', async () => {
+                        const productInfo = await model.productFieldsValue(item.goods_uuid);
+                        let productFields = '';
+
+                        productInfo.specifications.forEach((spec) => {
+                            productFields += `
+                                <li class="watch-product__fields-item">
+                                    <span>
+                                        <strong>${spec.represent ? spec.represent : spec.specification}:</strong>
+                                    </span>
+                                    <span>${spec.value ? spec.value : spec.value}</span>
+                                </li>
+                            `;
+                        });
+
+                        document.querySelector('.product-validator').appendChild(modal(
+                            `
+                                <div class="watch-product">
+                                    <h4 class="watch-product__title">${productInfo.goods_represent}</h4>
+                                    <ul class="watch-product__fields">
+                                        <li class="watch-product__fields-item">
+                                            <span><strong>Категория:</strong></span>
+                                            <span>${productInfo.category_represent ? productInfo.category_represent : productInfo.category_uuid}</span>
+                                        </li>
+                                        <li class="watch-product__fields-item">
+                                            <span><strong>Бренд:</strong></span>
+                                            <span>${productInfo.brand_represent ? productInfo.brand_represent : productInfo.brand_uuid}</span>
+                                        </li>
+                                        ${productFields}
+                                    </ul>
+                                </div>
+                            `,
+                            'Связать с этим товаром',
+                            'Закрыть',
+                            async (modalContent) => {
+                                if (confirm('Вы уверенны что хотите связать эти товары?')) {
+                                    const connectProducts = await model.connectProducts(data.uuid.v, item.goods_uuid);
+
+                                    selectNextProduct(200);
+                                    modalContent.remove();
+                                }
+                            },
+                        ));
+                    });
+
+                    linkButton.classList = 'button button--small button--green';
+                    linkButton.innerHTML = `
+                        Связать
+                    `;
+                    linkButton.addEventListener('click', async () => {
+                        const connectProducts = await model.connectProducts(data.uuid.v, item.goods_uuid);
+
+                        selectNextProduct(200);
+                    });
+
+                    itemButtons.classList = 'similar-items__buttons';
+                    itemButtons.append(watchButton, linkButton);
+
+                    itemsLi.classList = 'similar-items__item';
+                    itemsLi.textContent = item.goods_represent;
+                    itemsLi.appendChild(itemButtons);
+
+                    itemsUl.appendChild(itemsLi);
+                });
+
+                return itemsUl;
             }
 
             async function getFields(categoryUuid) {
@@ -929,6 +1118,25 @@ const page = async () => {
                     value.name = field.code.v;
                     value.id = field.code.v;
                     value.setAttribute('data-uuid', field.uuid.v);
+
+                    value.addEventListener('change', async () => {
+                        const formFields = collectFieldsData();
+
+                        if (formFields !== false) {
+                            const { category, brand, fields } = formFields;
+                            const similarProducts = await model.searchByParams(category, brand, fields);
+
+                            if (similarProducts.data.length > 0) {
+                                searchSimilarProductsBlock.innerHTML = `
+                                    <h3 class="similar-products-title">Похожие товары:</h3>
+                                `;
+                                searchSimilarProductsBlock.append(await renderSimilarItems(similarProducts.data));
+                                searchSimilarProductsBlock.style.display = 'block';
+                            } else {
+                                searchSimilarProductsBlock.style.display = 'none';
+                            }
+                        }
+                    });
 
                     valueBlock.classList = 'product-params__value';
                     valueBlock.appendChild(value);
@@ -1252,6 +1460,10 @@ const page = async () => {
             });
 
             block.appendChild(saveButton);
+
+            searchSimilarProductsBlock.classList = 'search-similar-products';
+            searchSimilarProductsBlock.style.display = 'none';
+            block.appendChild(searchSimilarProductsBlock);
 
             return block;
         };

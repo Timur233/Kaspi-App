@@ -320,3 +320,65 @@
     border: 1px solid #ccc;
     border-radius: softer(2);
 }
+
+.search-similar-products {
+    padding: spacer(6);
+    margin-top: spacer(4);
+    background:rgba(239, 239, 239, 0.6);
+    border-radius: 8px;
+}
+
+.similar-products-title {
+    @include font(14px, 1, 600);
+    margin-bottom: spacer(1);
+}
+
+.similar-items {
+    display: block;
+
+    &__item {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: spacer(4);
+        padding: spacer(2) 0 spacer(2) 0;
+        border-bottom: 1px solid rgb(226, 226, 226);
+    }
+
+    &__buttons {
+        display: flex;
+        align-items: center;
+        gap: spacer(3);
+    }
+}
+
+.watch-product {
+
+    &__title {
+        @include font($font-middle, 1.5, 500);
+
+        margin-bottom: spacer(3);
+    }
+
+    &__fields {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: spacer(4);
+    }
+
+    &__fields-item {
+        @include font($font-normal, 1);
+
+        display: flex;
+        justify-content: space-between;
+        padding: spacer(3) 0 spacer(3) 0;
+        color: rgb(49, 49, 49);
+        border-bottom: 1px solid rgb(216, 216, 216);
+
+        &:last-child {
+            border: none;
+        }
+    }
+
+}
