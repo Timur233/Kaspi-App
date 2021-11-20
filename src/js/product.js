@@ -983,10 +983,12 @@ const page = async () => {
                         let productFields = '';
 
                         productInfo.specifications.forEach((spec) => {
+                            const specLabel = document.querySelector(`.product-params__title[data-uuid="${spec.specification}"]`);
+
                             productFields += `
                                 <li class="watch-product__fields-item">
                                     <span>
-                                        <strong>${spec.represent ? spec.represent : spec.specification}:</strong>
+                                        <strong>${specLabel.textContent}:</strong>
                                     </span>
                                     <span>${spec.value ? spec.value : spec.value}</span>
                                 </li>
@@ -1143,6 +1145,7 @@ const page = async () => {
 
                     title.classList = 'product-params__title';
                     title.textContent = field.code.r;
+                    title.setAttribute('data-uuid', field.uuid.v);
 
                     item.classList = 'product-params__item';
                     item.appendChild(title);
@@ -1253,12 +1256,47 @@ const page = async () => {
 
             async function categorySelector() {
                 const input = document.createElement('input');
+                const button = document.createElement('button');
                 const dropdown = document.createElement('ul');
 
                 input.classList = 'title-edit__input input';
                 input.id = 'productCategory';
                 input.name = 'productCategory';
                 input.placeholder = 'Название категории';
+
+                // button.classList = 'category-edit__more-button';
+                // button.textContent = '...';
+                // button.addEventListener('click', () => {
+                //     document.querySelector('.product-validator').appendChild(modal(
+                //         `
+                //             <form class="creiate-brand">
+                //                 <div class="form-group">
+                //                     <label for="brandName">Название бренда</label>
+                //                     <input
+                //                         id="brandName"
+                //                         class="input"
+                //                         placeholder="Название бренда"
+                //                         value="${input.value}"
+                //                     />
+                //                 </div>
+                //             </form>
+                //         `,
+                //         'Выбрать',
+                //         'Отмена',
+                //         async (modalContent) => {
+                //             const brandTitleValue = modalContent.querySelector('#brandName');
+                //             const brandData = await model.newBrand(brandTitleValue.value);
+
+                //             if (!brandData.status && brandData.status !== 'Internal Server Error') {
+                //                 input.setAttribute('data-uuid', brandData.data.uuid);
+                //                 input.value = brandTitleValue.value;
+                //                 modalContent.remove();
+                //             } else {
+                //                 alert('Не удалось создать бренд');
+                //             }
+                //         },
+                //     ));
+                // });
 
                 dropdown.classList = 'category-edit__dropdown';
                 dropdown.id = 'dropdownChild';
@@ -1307,6 +1345,7 @@ const page = async () => {
                 });
 
                 category.appendChild(input);
+                // category.appendChild(button);
                 category.appendChild(dropdown);
 
                 await autoCompliteCat(input);
