@@ -3,7 +3,7 @@ import '../scss/main-product.scss';
 const config = {
     ssl:           'https://',
     host:          'asi-mart.kz',
-    session:       'ef29e501-e869-4dfb-a309-c33706f0bfe3',
+    session:       '51e0fb83-233d-45bd-bbc1-c2497105d262',
     supplierUuid:  '',
     query:         '',
     countProducts: '',
@@ -309,6 +309,32 @@ const page = async () => {
             const res = await req.json();
         };
 
+        const editProductFieldTitle = async (fieldName, uuid) => {
+            const req = await fetch(`${config.ssl + config.host}/catalog/categoryspecifications`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    ASM_session:   config.session,
+                    type:          'catalog',
+                    name:          'categoryspecifications',
+                    datatype:      'instance',
+                    action:        'update',
+                    instance_uuid: uuid,
+                    data:          {
+                        instance: {
+                            represent: fieldName,
+                        },
+                        tables: {},
+                        uuid,
+                    },
+                }),
+            });
+
+            const res = await req.json();
+
+            return res;
+        };
+
         const saveNewProduct = async (title, category, fields, supplierProdData) => {
             const req = await fetch(`${config.ssl + config.host}/catalog/goods`, {
                 method:  'POST',
@@ -461,6 +487,7 @@ const page = async () => {
             newBrand:           createNewBrand,
             catMap:             getCategoryFromMap,
             fields:             getProductFields,
+            editFieldTitle:     editProductFieldTitle,
             params:             getFieldParams,
             marvelInfo:         getMarvelInfo,
             suppliers:          getSuppliersList,
@@ -864,6 +891,7 @@ const page = async () => {
             const productParams = document.createElement('div');
             const saveButton = document.createElement('button');
             const searchSimilarProductsBlock = document.createElement('div');
+            const productInfo = data.goods.v ? await model.productFieldsValue(data.goods.v) : {};
 
             title.classList = 'title-edit product-editor__title';
             title.innerHTML = `
@@ -1057,9 +1085,21 @@ const page = async () => {
                 productParamTitle.classList = 'product-params__main-title';
                 productParamTitle.textContent = 'Параметры товара:';
 
+                function getFieldData(fieldUuid) {
+                    const sepecifications = productInfo.specifications;
+                    const specification = sepecifications.filter(spec => spec.specification === fieldUuid);
+
+                    if (specification[0]) {
+                        return specification[0].value;
+                    }
+
+                    return false;
+                }
+
                 fields.forEach(async (field) => {
                     const item = document.createElement('div');
                     const title = document.createElement('span');
+                    const titleEditBtn = document.createElement('button');
                     const valueBlock = document.createElement('span');
                     let value = {};
 
@@ -1093,17 +1133,20 @@ const page = async () => {
                             value = document.createElement('input');
                             value.classList.add('input');
                             value.placeholder = 'Строка';
+                            value.value = getFieldData(field.uuid.v) || '';
                             value.type = 'text';
                             break;
                         case '4747c2ef-cd86-4726-bfd0-a9f70d57df9a': // Число
                             value = document.createElement('input');
                             value.classList.add('input');
                             value.placeholder = 'Число';
+                            value.value = getFieldData(field.uuid.v) || '';
                             value.type = 'number';
                             break;
                         case '2719e1b8-2c6d-49b7-ba5d-352061757f31': // boolean
                             value = document.createElement('input');
                             value.classList.add('input');
+                            value.checked = getFieldData(field.uuid.v) ? 'checked' : '';
                             value.type = 'checkbox';
                             break;
                         case '2a2ea21a-98d8-4091-903a-bad00e5f0740': // Не распознанный тип
@@ -1144,8 +1187,48 @@ const page = async () => {
                     valueBlock.appendChild(value);
 
                     title.classList = 'product-params__title';
-                    title.textContent = field.code.r;
+                    title.textContent = field.represent.r ? `${field.represent.r}: ` : `${field.code.r}: `;
                     title.setAttribute('data-uuid', field.uuid.v);
+
+                    titleEditBtn.classList = 'button button--green button--small product-params__title-button';
+                    titleEditBtn.classList.add(field.represent.r ? 'button--outline' : 'button--green');
+                    titleEditBtn.addEventListener('click', () => {
+                        document.querySelector('.product-validator').appendChild(
+                            modal(`
+                                    <form class="creiate-brand">
+                                        <div class="form-group">
+                                            <label for="fieldName">Название поля</label>
+                                            <input
+                                                id="fieldName"
+                                                class="input"
+                                                placeholder="Название поля"
+                                                value=""
+                                            />
+                                        </div>
+                                    </form>
+                                `,
+                            'Сохранить',
+                            'Отменить',
+                            async (modalContent) => {
+                                const fieldNameNode = modalContent.querySelector('#fieldName');
+                                const fieldName = fieldNameNode.value;
+                                const saveFieldName = await model.editFieldTitle(fieldName, field.uuid.v);
+
+                                if (saveFieldName.data.length > 0) {
+                                    alert('Поле успешно сохранено');
+                                    title.textContent = `${fieldName}: `;
+                                    titleEditBtn.classList.remove('button--green');
+                                    titleEditBtn.classList.add('button--outline');
+                                    title.appendChild(titleEditBtn);
+                                    modalContent.remove();
+                                } else {
+                                    alert('Ошибка! Попробуйте повторить запрос');
+                                }
+                            }),
+                        );
+                    });
+
+                    title.appendChild(titleEditBtn);
 
                     item.classList = 'product-params__item';
                     item.appendChild(title);
@@ -1655,6 +1738,7 @@ const modal = (html, saveBtnLabel = 'Сохранить', cancelBtnLabel = 'За
     const cancelBtn = document.createElement('button');
     const wrapperHtml = document.createElement('div');
     let closeBtn = {};
+    let modalBg = {};
     let buttonsGroup = {};
 
     wrapperHtml.classList = 'main-modal';
@@ -1703,6 +1787,11 @@ const modal = (html, saveBtnLabel = 'Сохранить', cancelBtnLabel = 'За
 
     closeBtn = wrapperHtml.querySelector('.main-modal__close-button');
     closeBtn.addEventListener('click', () => {
+        closeModal();
+    });
+
+    modalBg = wrapperHtml.querySelector('.main-modal__bg');
+    modalBg.addEventListener('click', () => {
         closeModal();
     });
 
