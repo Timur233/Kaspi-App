@@ -3,7 +3,7 @@ import '../scss/main-product.scss';
 const config = {
     ssl:           'https://',
     host:          'asi-mart.kz',
-    session:       '51e0fb83-233d-45bd-bbc1-c2497105d262',
+    session:       '7a5bb002-b3ce-46b4-b236-4084b5dfd140',
     supplierUuid:  '',
     query:         '',
     countProducts: '',
@@ -901,6 +901,13 @@ const page = async () => {
             `;
             block.appendChild(title);
 
+            async function autoCompliteBrand(brandInput) {
+                if (productInfo.brand_uuid) {
+                    brandInput.value = productInfo.brand_represent;
+                    brandInput.setAttribute('data-uuid', productInfo.brand_uuid);
+                }
+            }
+
             async function autoCompliteCat(catInput) {
                 const catMap = await model.catMap(data.category.v);
 
@@ -1086,11 +1093,13 @@ const page = async () => {
                 productParamTitle.textContent = 'Параметры товара:';
 
                 function getFieldData(fieldUuid) {
-                    const sepecifications = productInfo.specifications;
-                    const specification = sepecifications.filter(spec => spec.specification === fieldUuid);
+                    if (productInfo.specifications) {
+                        const sepecifications = productInfo.specifications;
+                        const specification = sepecifications.filter(spec => spec.specification === fieldUuid);
 
-                    if (specification[0]) {
-                        return specification[0].value;
+                        if (specification[0]) {
+                            return specification[0].value;
+                        }
                     }
 
                     return false;
@@ -1106,6 +1115,8 @@ const page = async () => {
                     async function getFieldSelect() {
                         const params = await model.params(categoryUuid, field.code.v);
                         const select = document.createElement('select');
+                        const selectedParams = getFieldData(field.uuid.v);
+                        const multipleSelectedParams = compliteSelected();
 
                         if (field.multivalued.v) {
                             select.multiple = 'multiple';
@@ -1114,16 +1125,33 @@ const page = async () => {
                             const firstOption = document.createElement('option');
 
                             firstOption.textContent = 'Выбрать значение';
+                            // select.value = selectedParams || '';
                             select.appendChild(firstOption);
                         }
 
                         params.forEach((param) => {
                             const option = document.createElement('option');
 
+                            if (multipleSelectedParams && multipleSelectedParams.includes(param.name)) {
+                                option.selected = 'selected';
+                            }
+
                             option.value = param.code;
                             option.textContent = param.name;
                             select.appendChild(option);
                         });
+
+                        function compliteSelected() {
+                            if (selectedParams && selectedParams !== '[]') {
+                                try {
+                                    return new Array(JSON.parse(selectedParams));
+                                } catch (e) {
+                                    return new Array(selectedParams);
+                                }
+                            }
+
+                            return false;
+                        }
 
                         return select;
                     }
@@ -1324,6 +1352,8 @@ const page = async () => {
                         input.setAttribute('data-uuid', '');
                     }
                 });
+
+                autoCompliteBrand(input);
 
                 brand.appendChild(input);
                 brand.appendChild(dropdown);
