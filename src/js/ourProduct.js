@@ -3,7 +3,8 @@ import '../scss/main-product.scss';
 const config = {
     ssl:           'https://',
     host:          'asi-mart.kz',
-    session:       '7bc4f32e-0f62-4d86-85c4-535bdb590ca4',
+    session:       '6647155b-963d-4b8e-95a2-64ca5460b130',
+    filter:        '',
     supplierUuid:  '',
     query:         '',
     countProducts: '',
@@ -27,6 +28,36 @@ const page = async () => {
             const res = await req.json();
 
             return res.data.instance;
+        };
+
+        const getSupplierProduct = async (good_uuid) => {
+            const req = await fetch(`${config.ssl + config.host}/catalog/suppliergoods`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    ASM_session: config.session,
+                    action:      'select',
+                    datatype:    'list',
+                    filters:     {
+                        instance: [{
+                            filter_order:   0,
+                            preoperator:    'AND',
+                            attribute_name: 'goods',
+                            predicate:      '=',
+                            value:          good_uuid,
+                            postoperator:   '',
+                        }],
+                    },
+                }),
+            });
+
+            const res = await req.json();
+
+            if (res.data && res.data.list && res.data.list[0]) {
+                return res.data.list[0];
+            }
+
+            return false;
         };
 
         const getCategoriesForTitle = async (title = '') => {
@@ -182,6 +213,17 @@ const page = async () => {
         const getSupProducts = async (query = config.query) => {
             const filter = [];
 
+            if (config.filter !== '') {
+                filter.push({
+                    filter_order:   0,
+                    preoperator:    'AND',
+                    attribute_name: config.filter.param,
+                    predicate:      '=',
+                    value:          config.filter.val,
+                    postoperator:   '',
+                });
+            }
+
             if (query !== '') {
                 filter.push({
                     filter_order:   0,
@@ -201,18 +243,7 @@ const page = async () => {
                 });
             }
 
-            if (config.supplierUuid !== '') {
-                filter.push({
-                    filter_order:   0,
-                    preoperator:    'AND',
-                    attribute_name: 'supplier',
-                    predicate:      '=',
-                    value:          config.supplierUuid,
-                    postoperator:   '',
-                });
-            }
-
-            const req = await fetch(`${config.ssl + config.host}/catalog/suppliergoods`, {
+            const req = await fetch(`${config.ssl + config.host}/catalog/goods`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
@@ -222,7 +253,6 @@ const page = async () => {
                     filters:     {
                         instance: filter,
                     },
-                    // search:   query !== '' ? query : '',
                     action:   'select',
                     datatype: 'list',
                     sort:     [{ attribute_name: 'goods', direction: 'DESC', sort_order: 0 }],
@@ -479,6 +509,7 @@ const page = async () => {
             productList:        getSupProducts,
             productFieldsValue: getProductFieldsValue,
             findProduct:        findProducts,
+            supProduct:         getSupplierProduct,
             newProduct:         saveNewProduct,
             connectProducts:    connSuppProdNNew,
             saveProduct:        saveChange,
@@ -506,29 +537,28 @@ const page = async () => {
                 const titleBlock = document.createElement('div');
 
                 async function title() {
-                    const titleNode = document.createElement('select');
-                    const suppliers = await model.suppliers();
+                    const filterSelect = document.createElement('select');
 
-                    titleNode.classList = 'product-list-block__suppliers-select';
-                    titleNode.innerHTML = '<option value="">Все поставщики</option>';
+                    filterSelect.classList = 'product-list-block__suppliers-select';
+                    filterSelect.innerHTML = `
+                        <option value="">Все статусы</option>
+                        <option value="iskaspiprocessing">В обработке</option>
+                        <option value="iskaspifinished">Обработан</option>
+                        <option value="iskaspierror">Ошибка</option>
+                    `;
 
-                    suppliers.forEach((supplier) => {
-                        const option = document.createElement('option');
-
-                        option.value = supplier.uuid.v;
-                        option.textContent = supplier.represent.r;
-
-                        if (config.supplierUuid !== '') {
-                            option.selected = 'selected';
-                        }
-
-                        titleNode.appendChild(option);
-                    });
-
-                    titleNode.addEventListener('change', async () => {
+                    filterSelect.addEventListener('change', async () => {
                         let filteredProducts = [];
 
-                        config.supplierUuid = titleNode.value;
+                        if (filterSelect.value !== '') {
+                            config.filter = {
+                                param: filterSelect.value,
+                                val:   true,
+                            };
+                        } else {
+                            config.filter = '';
+                        }
+
                         config.page = 1;
                         localStorage.setItem('productPaginatorPage', 1);
 
@@ -540,7 +570,7 @@ const page = async () => {
                         renderPaginator();
                     });
 
-                    return titleNode;
+                    return filterSelect;
                 }
 
                 function searchBox() {
@@ -602,8 +632,8 @@ const page = async () => {
 
                     img.classList = 'product-list__img';
 
-                    if (product.photos.v.images && product.photos.v.images.length > 0) {
-                        img.src = product.photos.v.images[0];
+                    if (product.images.v.images && product.images.v.images.length > 0) {
+                        img.src = product.images.v.images[0];
                     } else {
                         img.src = '../img/placeholder.png';
                     }
@@ -612,7 +642,7 @@ const page = async () => {
                     info.innerHTML = `
                         <h4 class="product-list__title" title="${product.represent.r}">${product.represent.r}</h4>
                         <ul class="product-list__desc">
-                            <li>${product.supplier.r}</li>
+                            <li>${product.brand.r}</li>
                             <li>${product.category.r}</li>
                         </ul>
                     `;
@@ -621,9 +651,9 @@ const page = async () => {
 
                     li.classList = 'product-list__item';
 
-                    if (product.goods.v !== '') {
-                        li.classList.add('product-list__item--complite');
-                    }
+                    // if (product.goods.v !== '') {
+                    //     li.classList.add('product-list__item--complite');
+                    // }
 
                     li.setAttribute('data-uuid', product.uuid.v);
                     li.appendChild(img);
@@ -632,7 +662,6 @@ const page = async () => {
                     li.addEventListener('click', async () => {
                         const editorBlock = document.querySelector('.editor-block');
                         const editor = await productEditor(product);
-                        const infoNode = document.querySelector('.product-info');
                         const info = await productInfo(product);
                         const selectedLi = document.querySelector('.product-list__item--active');
 
@@ -652,89 +681,6 @@ const page = async () => {
                 });
 
                 return list;
-            }
-
-            function renderPaginator1() {
-                const block = document.createElement('div');
-                const paginationLabel = document.createElement('span');
-
-                function getPaginationList() {
-                    const paginationList = document.createElement('div');
-                    const count = config.countProducts;
-                    const limit = 25;
-                    const { page } = config;
-                    const lastPage = Math.ceil(count / limit);
-
-                    function getPaginationNumbers() {
-                        const numbers = [];
-
-                        if (page === 1) {
-                            numbers.push(
-                                { title: page, value: page },
-                                { title: page + 1, value: page + 1 },
-                                { title: page + 2, value: page + 2 },
-                                { title: '<i class="icon icon-chevron-right"></i>', value: page + 1 },
-                                { title: lastPage, value: lastPage },
-                            );
-                        }
-
-                        if (page > 1 && page < lastPage) {
-                            numbers.push(
-                                { title: 1, value: 1 },
-                                { title: '<i class="icon icon-chevron-left"></i>', value: page - 1 },
-                                { title: page - 1, value: page - 1 },
-                                { title: page, value: page },
-                                { title: page + 1, value: page + 1 },
-                                { title: '<i class="icon icon-chevron-right"></i>', value: page + 1 },
-                                { title: lastPage, value: lastPage },
-                            );
-                        }
-
-                        if (page === lastPage) {
-                            numbers.push(
-                                { title: 1, value: 1 },
-                                { title: '<i class="icon icon-chevron-left"></i>', value: page - 1 },
-                                { title: page - 2, value: page - 2 },
-                                { title: page - 1, value: page - 1 },
-                                { title: page, value: page },
-                            );
-                        }
-
-                        return numbers;
-                    }
-
-                    getPaginationNumbers().forEach((item) => {
-                        const button = document.createElement('button');
-
-                        button.classList = 'pagination-list__item button button--middle button--green';
-
-                        if (item.value === page) {
-                            button.classList.add('button--outline');
-                        } else {
-                            button.addEventListener('click', () => {
-                                config.page = item.value;
-                                build();
-                            });
-                        }
-
-                        button.innerHTML = item.title;
-                        button.setAttribute('data-value', item.value);
-                        paginationList.appendChild(button);
-                    });
-
-                    paginationList.classList = 'pagination-list';
-
-                    return paginationList;
-                }
-
-                paginationLabel.classList = 'pagination__title';
-                paginationLabel.textContent = `Показано ${config.page * 25} элементов из ${config.countProducts}`;
-                block.appendChild(paginationLabel);
-
-                block.appendChild(getPaginationList());
-                block.classList = 'pagination';
-
-                return block;
             }
 
             function renderPaginator() {
@@ -776,9 +722,10 @@ const page = async () => {
             const block = document.createElement('div');
             const image = document.createElement('img');
             const title = document.createElement('span');
+            const supplier = await model.supProduct(data.uuid.v);
 
-            if (data.photos.v.images && data.photos.v.images.length > 0) {
-                image.src = data.photos.v.images[0];
+            if (supplier.photos.v.images && supplier.photos.v.images.length > 0) {
+                image.src = supplier.photos.v.images[0];
                 image.classList = 'product-info__image';
                 block.appendChild(image);
             }
@@ -798,7 +745,7 @@ const page = async () => {
                             Поставщик:
                         </span>
                         <span class="product-spec__value">
-                            ${data.supplier.r}
+                            ${supplier.supplier.r ? supplier.supplier.r : ''}
                         </span>
                     </div>
 
@@ -816,7 +763,7 @@ const page = async () => {
                             Код:
                         </span>
                         <span class="product-spec__value">
-                            ${data.code.v}
+                            ${supplier.code.v}
                         </span>
                     </div>
 
@@ -825,7 +772,10 @@ const page = async () => {
                             Ссылка на товар:
                         </span>
                         <span class="product-spec__value">
-                            <a href="${data.url.v}" class="product-spec__arrow-button button button--small button--green" target="_blank">Перейти</a>
+                            <a href="${supplier.url.v}"
+                                class="product-spec__arrow-button button button--small button--green"
+                                target="_blank"
+                            >Перейти</a>
                         </span>
                     </div>
 
@@ -834,7 +784,11 @@ const page = async () => {
                             Поиск на каспи:
                         </span>
                         <span class="product-spec__value">
-                            <a href="https://kaspi.kz/shop/search/?text=${data.represent.v}" class="product-spec__arrow-button button button--small button--red" target="_blank">Перейти</a>
+                            <a
+                                href="https://kaspi.kz/shop/search/?text=${data.represent.v}"
+                                class="product-spec__arrow-button button button--small button--red"
+                                target="_blank"
+                            >Перейти</a>
                         </span>
                     </div>
 
@@ -873,8 +827,8 @@ const page = async () => {
                     spec.querySelector('.preloader-img').remove();
                 }
 
-                if (data.additionalinfo.v.data.length > 0) {
-                    data.additionalinfo.v.data.forEach((field) => {
+                if (supplier.additionalinfo.v.data.length > 0) {
+                    supplier.additionalinfo.v.data.forEach((field) => {
                         getAdditionalInfo(field.represent, field.value);
                     });
                 } else {
@@ -901,7 +855,7 @@ const page = async () => {
             const productParams = document.createElement('div');
             const saveButton = document.createElement('button');
             const searchSimilarProductsBlock = document.createElement('div');
-            const productInfo = data.goods.v ? await model.productFieldsValue(data.goods.v) : {};
+            const productInfo = data.uuid.v ? await model.productFieldsValue(data.uuid.v) : {};
 
             title.classList = 'title-edit product-editor__title';
             title.innerHTML = `
@@ -919,95 +873,12 @@ const page = async () => {
             }
 
             async function autoCompliteCat(catInput) {
-                const catMap = await model.catMap(data.category.v);
+                const categoryName = data.category.r;
+                const categoryUuid = data.category.v;
 
-                if (catMap) {
-                    const categoryName = catMap.represent.r.split(' - ');
-
-                    catInput.value = categoryName[0];
-                    catInput.setAttribute('data-uuid', catMap.ourcategory.v);
-                    getFields(catMap.ourcategory.v);
-                }
-            }
-
-            function collectFieldsData() {
-                const categoryInput = document.getElementById('productCategory');
-                const brandInput = document.getElementById('productBrand');
-                const params = document.querySelector('.product-params');
-                const filedNodes = params.querySelectorAll('input ,select');
-                const formFields = [];
-
-                if (title.value !== ''
-                    && categoryInput.getAttribute('data-uuid') !== null
-                    && brandInput.getAttribute('data-uuid') !== null
-                ) {
-                    filedNodes.forEach((field) => {
-                        function checkField(val, uuid) {
-                            if (val !== '' && val !== 'Выбрать значение') {
-                                formFields.push({ uuid, value: val });
-                            }
-                        }
-
-                        if (field.nodeName === 'INPUT') {
-                            switch (field.type) {
-                                case 'number':
-                                    checkField(field.value, field.getAttribute('data-uuid'));
-                                    break;
-                                case 'text':
-                                    checkField(field.value, field.getAttribute('data-uuid'));
-                                    break;
-                                case 'checkbox':
-                                    if (field.checked) {
-                                        checkField(true, field.getAttribute('data-uuid'));
-                                    } else {
-                                        checkField(false, field.getAttribute('data-uuid'));
-                                    }
-
-                                    break;
-                                default:
-                                    checkField(field.value, field.getAttribute('data-uuid'));
-                                    break;
-                            }
-                        }
-
-                        if (field.nodeName === 'SELECT') {
-                            let selectedOptions = {};
-
-                            switch (field.multiple) {
-                                case false:
-                                    checkField(field.value, field.getAttribute('data-uuid'));
-                                    break;
-                                case true:
-                                    const list = [];
-
-                                    selectedOptions = field.querySelectorAll('option');
-                                    selectedOptions.forEach((opt) => {
-                                        if (opt.selected) {
-                                            list.push(opt.value);
-                                        }
-                                    });
-
-                                    checkField(
-                                        list.length === 1 ? list[0] : JSON.stringify(list),
-                                        field.getAttribute('data-uuid'),
-                                        field,
-                                    );
-                                    break;
-                                default:
-                                    checkField(field.value, field.getAttribute('data-uuid'), field);
-                                    break;
-                            }
-                        }
-                    });
-
-                    return {
-                        category: categoryInput.getAttribute('data-uuid'),
-                        brand:    brandInput.getAttribute('data-uuid'),
-                        fields:   formFields,
-                    };
-                }
-
-                return false;
+                catInput.value = categoryName;
+                catInput.setAttribute('data-uuid', categoryUuid);
+                getFields(categoryUuid);
             }
 
             async function renderSimilarItems(foundItems) {
@@ -1201,25 +1072,6 @@ const page = async () => {
                     value.name = field.code.v;
                     value.id = field.code.v;
                     value.setAttribute('data-uuid', field.uuid.v);
-
-                    value.addEventListener('change', async () => {
-                        const formFields = collectFieldsData();
-
-                        if (formFields !== false) {
-                            const { category, brand, fields } = formFields;
-                            const similarProducts = await model.searchByParams(category, brand, fields);
-
-                            if (similarProducts.data.length > 0) {
-                                searchSimilarProductsBlock.innerHTML = `
-                                    <h3 class="similar-products-title">Похожие товары:</h3>
-                                `;
-                                searchSimilarProductsBlock.append(await renderSimilarItems(similarProducts.data));
-                                searchSimilarProductsBlock.style.display = 'block';
-                            } else {
-                                searchSimilarProductsBlock.style.display = 'none';
-                            }
-                        }
-                    });
 
                     valueBlock.classList = 'product-params__value';
                     valueBlock.appendChild(value);
@@ -1573,7 +1425,7 @@ const page = async () => {
                             brand.getAttribute('data-uuid'),
                             fields,
                             data,
-                            data.goods.v || '',
+                            data.uuid.v || '',
                         );
 
                         return saveRequest;

@@ -70,6 +70,23 @@
         }
     }
 
+    &--red {
+        background: #f14635;
+        border-color: #f14635;
+        color: $white;
+        box-shadow: 0 2px 4px rgba(28, 24, 25, 0.1);
+
+        &:hover {
+            background-color: #f17267;
+            border-color: #f17267;
+        }
+
+        &:focus,
+        &:active {
+            box-shadow: 0 0 0 3px #6b140c;
+        }
+    }
+
     &--outline {
         background: $white;
         border-color: $white;
