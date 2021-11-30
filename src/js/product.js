@@ -3,7 +3,8 @@ import '../scss/main-product.scss';
 const config = {
     ssl:           'https://',
     host:          'asi-mart.kz',
-    session:       '7bc4f32e-0f62-4d86-85c4-535bdb590ca4',
+    session:       'f3824caf-d865-4f65-b42a-3410cedb4adc',
+    isAdmin: false,
     supplierUuid:  '',
     query:         '',
     countProducts: '',
@@ -12,6 +13,31 @@ const config = {
 
 const page = async () => {
     const model = (() => {
+
+        (async function () {
+            const req = await fetch(`${config.ssl + config.host}/main/user`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    ASM_session:   config.session,
+                    action: 'getUserBySession'
+                }),
+            });
+            const res = await req.json();
+            const admins = [
+                'b3b00659-ade8-48d5-8e28-6b6b571287aa',                
+                'f0dbca4c-1e63-42f3-8a97-da6ae305fc66',                
+                'c9747928-6745-4315-b090-12162e979824',                
+                'a380d9a3-babf-4bc3-8f47-bd23887b3fea',                
+                '4cfc4940-e963-4be5-84a7-5983391de3af',                
+            ];
+
+            if (res.data.user && admins.includes(res.data.user.user_uuid)) {
+                config.isAdmin = true;
+                console.log('admin', config.isAdmin);
+            }
+        })();
+
         const getProductInfo = async (uuid) => {
             const req = await fetch(`${config.ssl + config.host}/catalog/suppliergoods`, {
                 method:  'POST',
@@ -1225,48 +1251,50 @@ const page = async () => {
                     valueBlock.appendChild(value);
 
                     title.classList = 'product-params__title';
-                    title.textContent = field.represent.r ? `${field.represent.r}: ` : `${field.code.r}: `;
+                    title.innerHTML = field.represent.r ? `${field.code.r} <hr> ${field.represent.r}: ` : `${field.code.r}: `;
                     title.setAttribute('data-uuid', field.uuid.v);
 
-                    titleEditBtn.classList = 'button button--green button--small product-params__title-button';
-                    titleEditBtn.classList.add(field.represent.r ? 'button--outline' : 'button--green');
-                    titleEditBtn.addEventListener('click', () => {
-                        document.querySelector('.product-validator').appendChild(
-                            modal(`
-                                    <form class="creiate-brand">
-                                        <div class="form-group">
-                                            <label for="fieldName">Название поля</label>
-                                            <input
-                                                id="fieldName"
-                                                class="input"
-                                                placeholder="Название поля"
-                                                value=""
-                                            />
-                                        </div>
-                                    </form>
-                                `,
-                            'Сохранить',
-                            'Отменить',
-                            async (modalContent) => {
-                                const fieldNameNode = modalContent.querySelector('#fieldName');
-                                const fieldName = fieldNameNode.value;
-                                const saveFieldName = await model.editFieldTitle(fieldName, field.uuid.v);
+                    if (config.isAdmin) {
+                        titleEditBtn.classList = 'button button--green button--small product-params__title-button';
+                        titleEditBtn.classList.add(field.represent.r ? 'button--outline' : 'button--green');
+                        titleEditBtn.addEventListener('click', () => {
+                            document.querySelector('.product-validator').appendChild(
+                                modal(`
+                                        <form class="creiate-brand">
+                                            <div class="form-group">
+                                                <label for="fieldName">Название поля</label>
+                                                <input
+                                                    id="fieldName"
+                                                    class="input"
+                                                    placeholder="Название поля"
+                                                    value=""
+                                                />
+                                            </div>
+                                        </form>
+                                    `,
+                                'Сохранить',
+                                'Отменить',
+                                async (modalContent) => {
+                                    const fieldNameNode = modalContent.querySelector('#fieldName');
+                                    const fieldName = fieldNameNode.value;
+                                    const saveFieldName = await model.editFieldTitle(fieldName, field.uuid.v);
 
-                                if (saveFieldName.data.length > 0) {
-                                    alert('Поле успешно сохранено');
-                                    title.textContent = `${fieldName}: `;
-                                    titleEditBtn.classList.remove('button--green');
-                                    titleEditBtn.classList.add('button--outline');
-                                    title.appendChild(titleEditBtn);
-                                    modalContent.remove();
-                                } else {
-                                    alert('Ошибка! Попробуйте повторить запрос');
-                                }
-                            }),
-                        );
-                    });
+                                    if (saveFieldName.data.length > 0) {
+                                        alert('Поле успешно сохранено');
+                                        title.textContent = `${fieldName}: `;
+                                        titleEditBtn.classList.remove('button--green');
+                                        titleEditBtn.classList.add('button--outline');
+                                        title.appendChild(titleEditBtn);
+                                        modalContent.remove();
+                                    } else {
+                                        alert('Ошибка! Попробуйте повторить запрос');
+                                    }
+                                }),
+                            );
+                        });
 
-                    title.appendChild(titleEditBtn);
+                        title.appendChild(titleEditBtn);
+                    }
 
                     item.classList = 'product-params__item';
                     item.appendChild(title);
@@ -1312,43 +1340,45 @@ const page = async () => {
                         dropdown.appendChild(li);
                     });
 
-                    newBrandli.classList = 'brand-edit__new-brand';
-                    newBrandli.innerHTML = '<i class="icon icon-plus"></i> Добавить новый бренд';
+                    if (config.isAdmin) {
+                        newBrandli.classList = 'brand-edit__new-brand';
+                        newBrandli.innerHTML = '<i class="icon icon-plus"></i> Добавить новый бренд';
 
-                    newBrandli.addEventListener('click', () => {
-                        dropdown.style.display = 'none';
-                        document.querySelector('.product-validator').appendChild(modal(
-                            `
-                                <form class="creiate-brand">
-                                    <div class="form-group">
-                                        <label for="brandName">Название бренда</label>
-                                        <input
-                                            id="brandName"
-                                            class="input"
-                                            placeholder="Название бренда"
-                                            value="${input.value}"
-                                        />
-                                    </div>
-                                </form>
-                            `,
-                            'Отправить',
-                            'Отмена',
-                            async (modalContent) => {
-                                const brandTitleValue = modalContent.querySelector('#brandName');
-                                const brandData = await model.newBrand(brandTitleValue.value.trim());
+                        newBrandli.addEventListener('click', () => {
+                            dropdown.style.display = 'none';
+                            document.querySelector('.product-validator').appendChild(modal(
+                                `
+                                    <form class="creiate-brand">
+                                        <div class="form-group">
+                                            <label for="brandName">Название бренда</label>
+                                            <input
+                                                id="brandName"
+                                                class="input"
+                                                placeholder="Название бренда"
+                                                value="${input.value}"
+                                            />
+                                        </div>
+                                    </form>
+                                `,
+                                'Отправить',
+                                'Отмена',
+                                async (modalContent) => {
+                                    const brandTitleValue = modalContent.querySelector('#brandName');
+                                    const brandData = await model.newBrand(brandTitleValue.value.trim());
 
-                                if (!brandData.status && brandData.status !== 'Internal Server Error') {
-                                    input.setAttribute('data-uuid', brandData.data.uuid);
-                                    input.value = brandTitleValue.value;
-                                    modalContent.remove();
-                                } else {
-                                    alert('Не удалось создать бренд');
-                                }
-                            },
-                        ));
-                    });
+                                    if (!brandData.status && brandData.status !== 'Internal Server Error') {
+                                        input.setAttribute('data-uuid', brandData.data.uuid);
+                                        input.value = brandTitleValue.value;
+                                        modalContent.remove();
+                                    } else {
+                                        alert('Не удалось создать бренд');
+                                    }
+                                },
+                            ));
+                        });
 
-                    dropdown.appendChild(newBrandli);
+                        dropdown.appendChild(newBrandli);
+                    }
 
                     return result;
                 }
@@ -1757,7 +1787,28 @@ const paginator = (countItems, type, callback) => {
             paginationList.appendChild(button);
         });
 
+        function renderPaginationInput() {
+            const block = document.createElement('div');
+            const input = document.createElement('input');
+            const button = document.createElement('button');
+
+            input.classList = 'input pagination-list__input'
+            input.value = page;
+
+            button.classList = 'pagination-list__item pagination-list__search-butt button button--middle button--green';
+            button.innerHTML = '<i class="icon icon-arrow-right"></i>';
+            button.addEventListener('click', () => {
+                callback(input.value);
+            });
+
+            block.classList = 'pagination-list__input-group';
+            block.append(input, button);
+
+            return block;
+        }
+
         paginationList.classList = 'pagination-list';
+        paginationList.appendChild(renderPaginationInput());
 
         return paginationList;
     }

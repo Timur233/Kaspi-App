@@ -10,4 +10,29 @@
 .pagination-list {
     display: flex;
     gap: spacer(1);
+
+    &__item {
+        @include font($font-small);
+
+        padding: spacer(1) spacer(2);
+    }
+
+    &__input-group {
+        display: flex;
+        align-items: center;
+        margin-left: spacer(2);
+        gap: spacer(1);
+    }
+
+    &__input {
+        @include font($font-small);
+
+        width: 40px;
+        padding: 0 spacer(1);
+        text-align: center;
+    }
+    
+    &__search-butt {
+        height: 100%;
+    }
 }
