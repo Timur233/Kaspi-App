@@ -3,8 +3,8 @@ import '../scss/main-product.scss';
 const config = {
     ssl:           'https://',
     host:          'asi-mart.kz',
-    session:       'f3824caf-d865-4f65-b42a-3410cedb4adc',
-    isAdmin: false,
+    session:       '5c53e682-ea1a-419a-9631-ec1c779b9f51',
+    isAdmin:       false,
     supplierUuid:  '',
     query:         '',
     countProducts: '',
@@ -13,30 +13,29 @@ const config = {
 
 const page = async () => {
     const model = (() => {
-
         (async function () {
             const req = await fetch(`${config.ssl + config.host}/main/user`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
-                    ASM_session:   config.session,
-                    action: 'getUserBySession'
+                    ASM_session: config.session,
+                    action:      'getUserBySession',
                 }),
             });
             const res = await req.json();
             const admins = [
-                'b3b00659-ade8-48d5-8e28-6b6b571287aa',                
-                'f0dbca4c-1e63-42f3-8a97-da6ae305fc66',                
-                'c9747928-6745-4315-b090-12162e979824',                
-                'a380d9a3-babf-4bc3-8f47-bd23887b3fea',                
-                '4cfc4940-e963-4be5-84a7-5983391de3af',                
+                'b3b00659-ade8-48d5-8e28-6b6b571287aa',
+                'f0dbca4c-1e63-42f3-8a97-da6ae305fc66',
+                'c9747928-6745-4315-b090-12162e979824',
+                'a380d9a3-babf-4bc3-8f47-bd23887b3fea',
+                '4cfc4940-e963-4be5-84a7-5983391de3af',
             ];
 
             if (res.data.user && admins.includes(res.data.user.user_uuid)) {
                 config.isAdmin = true;
                 console.log('admin', config.isAdmin);
             }
-        })();
+        }());
 
         const getProductInfo = async (uuid) => {
             const req = await fetch(`${config.ssl + config.host}/catalog/suppliergoods`, {
@@ -1716,7 +1715,7 @@ const paginator = (countItems, type, callback) => {
         const paginationList = document.createElement('div');
         const count = config.countItems;
         const limit = 25;
-        const { page } = config;
+        const page = config.page !== 0 ? config.page : 1;
         const lastPage = Math.ceil(count / limit);
 
         function getPaginationNumbers() {
@@ -1792,8 +1791,14 @@ const paginator = (countItems, type, callback) => {
             const input = document.createElement('input');
             const button = document.createElement('button');
 
-            input.classList = 'input pagination-list__input'
+            input.classList = 'input pagination-list__input';
             input.value = page;
+            input.addEventListener('keyup', (event) => {
+                event.keyCode === 13 ? callback(input.value) : false;
+            });
+            input.addEventListener('input', (event) => {
+                input.value = input.value.replace(/\D/, '');
+            });
 
             button.classList = 'pagination-list__item pagination-list__search-butt button button--middle button--green';
             button.innerHTML = '<i class="icon icon-arrow-right"></i>';

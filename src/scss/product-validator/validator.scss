@@ -184,7 +184,9 @@
     }
 
     &__title {
-        @include font($font-normal, 1.2, 400)
+        @include font($font-normal, 1.2, 400);
+
+        overflow-wrap: anywhere;
     }
 
     &__title-button {

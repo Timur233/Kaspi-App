@@ -3,7 +3,7 @@ import '../scss/main-product.scss';
 const config = {
     ssl:           'https://',
     host:          'asi-mart.kz',
-    session:       '6647155b-963d-4b8e-95a2-64ca5460b130',
+    session:       '5c53e682-ea1a-419a-9631-ec1c779b9f51',
     filter:        '',
     supplierUuid:  '',
     query:         '',
@@ -629,6 +629,7 @@ const page = async () => {
                     const img = document.createElement('img');
                     const info = document.createElement('div');
                     const butt = document.createElement('button');
+                    const status = '';
 
                     img.classList = 'product-list__img';
 
@@ -651,9 +652,19 @@ const page = async () => {
 
                     li.classList = 'product-list__item';
 
-                    // if (product.goods.v !== '') {
-                    //     li.classList.add('product-list__item--complite');
-                    // }
+                    (function () {
+                        if (product.iskaspiprocessing.v) {
+                            li.classList.add('product-list__item--processing');
+                        }
+
+                        if (product.iskaspifinished.v) {
+                            li.classList.add('product-list__item--finished');
+                        }
+
+                        if (product.iskaspierror.v) {
+                            li.classList.add('product-list__item--error');
+                        }
+                    }());
 
                     li.setAttribute('data-uuid', product.uuid.v);
                     li.appendChild(img);
@@ -664,6 +675,8 @@ const page = async () => {
                         const editor = await productEditor(product);
                         const info = await productInfo(product);
                         const selectedLi = document.querySelector('.product-list__item--active');
+
+                        console.log(product);
 
                         if (selectedLi) {
                             selectedLi.classList.remove('product-list__item--active');
@@ -1538,7 +1551,7 @@ const paginator = (countItems, type, callback) => {
         const paginationList = document.createElement('div');
         const count = config.countItems;
         const limit = 25;
-        const { page } = config;
+        const page = config.page !== 0 ? config.page : 1;
         const lastPage = Math.ceil(count / limit);
 
         function getPaginationNumbers() {
@@ -1609,7 +1622,34 @@ const paginator = (countItems, type, callback) => {
             paginationList.appendChild(button);
         });
 
+        function renderPaginationInput() {
+            const block = document.createElement('div');
+            const input = document.createElement('input');
+            const button = document.createElement('button');
+
+            input.classList = 'input pagination-list__input';
+            input.value = page;
+            input.addEventListener('keyup', (event) => {
+                event.keyCode === 13 ? callback(input.value) : false;
+            });
+            input.addEventListener('input', (event) => {
+                input.value = input.value.replace(/\D/, '');
+            });
+
+            button.classList = 'pagination-list__item pagination-list__search-butt button button--middle button--green';
+            button.innerHTML = '<i class="icon icon-arrow-right"></i>';
+            button.addEventListener('click', () => {
+                callback(input.value);
+            });
+
+            block.classList = 'pagination-list__input-group';
+            block.append(input, button);
+
+            return block;
+        }
+
         paginationList.classList = 'pagination-list';
+        paginationList.appendChild(renderPaginationInput());
 
         return paginationList;
     }

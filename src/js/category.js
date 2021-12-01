@@ -10,7 +10,7 @@ const validator = function (node, type, list) {
     let search = '';
     const titleBlock = document.createElement('div');
     const bodyBlock = document.createElement('div');
-    let dataSource = 'marketplacecategories';
+    let dataSource = 'categories';
     let sourceUuid = '';
 
     function clearBody() {
@@ -20,25 +20,45 @@ const validator = function (node, type, list) {
     async function getCategories(parent = '00000000-0000-0000-0000-000000000000') {
         const filter = [];
 
-        if (sourceUuid !== '') {
+        if (parent == '00000000-0000-0000-0000-000000000000') {
             filter.push({
-                filter_order:   0,
+                filter_order:   1,
                 preoperator:    'AND',
-                attribute_name: dataSource === 'marketplacecategories' ? 'marketplace' : 'supplier',
+                attribute_name: 'isfolder',
                 predicate:      '=',
-                value:          sourceUuid,
+                value:          'true',
                 postoperator:   '',
             });
         }
 
-        filter.push({
-            filter_order:   0,
-            preoperator:    'AND',
-            attribute_name: 'folder',
-            predicate:      '=',
-            value:          parent,
-            postoperator:   '',
-        });
+        if (parent == '00000000-0000-0000-0000-000000000001') {
+            filter.push({
+                filter_order:   0,
+                preoperator:    'AND',
+                attribute_name: 'isfolder',
+                predicate:      '=',
+                value:          'false',
+                postoperator:   '',
+            });
+
+            filter.push({
+                filter_order:   1,
+                preoperator:    'AND',
+                attribute_name: 'folder',
+                predicate:      '=',
+                value:          '00000000-0000-0000-0000-000000000000',
+                postoperator:   '',
+            });
+        } else {
+            filter.push({
+                filter_order:   0,
+                preoperator:    'AND',
+                attribute_name: 'folder',
+                predicate:      '=',
+                value:          parent,
+                postoperator:   '',
+            });
+        }
 
         const req = await fetch(`${config.ssl + config.host}/catalog/${dataSource}`, {
             method:  'POST',
@@ -146,7 +166,7 @@ const validator = function (node, type, list) {
             subList.classList.toggle('category-list__sub-menu--open');
 
             if (!button.classList.contains('category-list__button--open')) {
-            // eslint-disable-next-line no-use-before-define
+                // eslint-disable-next-line no-use-before-define
                 await getCategoryItems(uuid, subList);
             }
 
@@ -225,6 +245,26 @@ const validator = function (node, type, list) {
 
         async function getCategoryItems(uuid, parentNode = list) {
             const categories = await getCategories(uuid !== '' ? uuid : '00000000-0000-0000-0000-000000000000');
+
+            console.log(categories);
+
+            if (uuid == '') {
+                categories.push({
+                    isfolder: {
+                        v: true,
+                        r: true,
+                    },
+                    uuid: {
+                        v: '00000000-0000-0000-0000-000000000001',
+                        r: '00000000-0000-0000-0000-000000000001',
+                    },
+                    represent: {
+                        v: 'Не распределенные',
+                        r: 'Не распределенные',
+                    },
+
+                });
+            }
 
             categories.forEach(async (category) => {
                 parentNode.appendChild(await getCategoryItem(category));
@@ -344,7 +384,7 @@ const validator = function (node, type, list) {
     }
 
     async function renderValidator() {
-        node.classList = 'validator cats-validator__item';
+        node.classList = 'validator ourgoods-validator__item';
         node.appendChild(await setTitle(type));
 
         node.appendChild(await setBody(type));
@@ -362,10 +402,5 @@ async function start() {
 
     document.querySelector('.cats-validator__wrapper')
         .appendChild(await test.render());
-
-    const testRight = validator(document.createElement('div'), 'multi');
-
-    document.querySelector('.cats-validator__wrapper')
-        .appendChild(await testRight.render());
 }
 start();
