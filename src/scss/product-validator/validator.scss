@@ -29,9 +29,6 @@
     border-radius: softer(2);
     background-color: rgb(239 239 239 / 60%);
     box-shadow: 0 4px 24px -16px rgb(51 51 51 / 6%) inset;
-    height: 100%;
-    overflow-y: scroll;
-    overflow-x: hidden;
 
     &::-webkit-scrollbar {
         width: 6px;
@@ -97,6 +94,17 @@
 .product-editor {
     width: calc(65% - 16px);
     flex: 0 0 calc(65% - 16px);
+
+    &__comment {
+        display: block;
+        color: #842029;
+        background-color: #f8d7da;
+        border-color: #f5c2c7;
+        line-height: 1.2;
+        border-radius: softer(2);
+        padding: spacer(3);
+        margin-bottom: spacer(4);
+    }
 
     &--full-width {
         width: 100%;
@@ -287,10 +295,24 @@
         cursor: pointer;
         padding: spacer(1) spacer(3);
         border-bottom: 1px solid #ccc;
+        position: relative;
 
         &--complite {
             background: #b2ef94;
         }
+
+        &--finished::before {
+            background-color: #62db25;
+        }
+
+        &--error::before {
+            background-color: #c43c3c;
+        }
+
+        &--processing::before {
+            background-color: #dfe215;
+        }
+
 
         &--active {
             background: #fff6b9;
@@ -298,6 +320,15 @@
 
         &:last-child {
             border: none
+        }
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
         }
     }
 
@@ -351,6 +382,7 @@
 
 .editor-block {
     display: flex;
+    align-items: flex-start;
     gap: 16px;
     flex: 0 0 calc(70% - spacer(4));
     padding: spacer(5);

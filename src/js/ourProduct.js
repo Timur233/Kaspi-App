@@ -3,7 +3,7 @@ import '../scss/main-product.scss';
 const config = {
     ssl:           'https://',
     host:          'asi-mart.kz',
-    session:       '5c53e682-ea1a-419a-9631-ec1c779b9f51',
+    session:       'aab7f0b0-7398-4928-b5b8-d779c0dba060',
     filter:        '',
     supplierUuid:  '',
     query:         '',
@@ -861,6 +861,7 @@ const page = async () => {
 
         const productEditor = async (data) => {
             const block = document.createElement('div');
+            const comment = document.createElement('span');
             const title = document.createElement('div');
             const category = document.createElement('div');
             const brand = document.createElement('div');
@@ -869,6 +870,12 @@ const page = async () => {
             const saveButton = document.createElement('button');
             const searchSimilarProductsBlock = document.createElement('div');
             const productInfo = data.uuid.v ? await model.productFieldsValue(data.uuid.v) : {};
+
+            if (data.comment.r !== '') {
+                comment.classList = 'product-editor__comment';
+                comment.textContent = data.comment.r;
+                block.appendChild(comment);
+            }
 
             title.classList = 'title-edit product-editor__title';
             title.innerHTML = `
@@ -1025,6 +1032,8 @@ const page = async () => {
 
                         params.forEach((param) => {
                             const option = document.createElement('option');
+
+                            // debugger;
 
                             if (multipleSelectedParams && multipleSelectedParams.includes(param.name)) {
                                 option.selected = 'selected';

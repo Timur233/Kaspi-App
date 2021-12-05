@@ -5,6 +5,9 @@ module.exports = {
             output: {
                 assetFileNames: '[name].[ext]',
             },
+            // input: {
+            //     main: './our.html',
+            // },
         },
     },
 };
