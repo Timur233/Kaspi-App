@@ -3,7 +3,7 @@ import '../scss/main-product.scss';
 const config = {
     ssl:           'https://',
     host:          'asi-mart.kz',
-    session:       'aab7f0b0-7398-4928-b5b8-d779c0dba060',
+    session:       '49a03091-bdf0-4fba-9fa1-230907c5d09d',
     filter:        '',
     supplierUuid:  '',
     query:         '',
@@ -13,6 +13,30 @@ const config = {
 
 const page = async () => {
     const model = (() => {
+        (async function () {
+            const req = await fetch(`${config.ssl + config.host}/main/user`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    ASM_session: config.session,
+                    action:      'getUserBySession',
+                }),
+            });
+            const res = await req.json();
+            const admins = [
+                'b3b00659-ade8-48d5-8e28-6b6b571287aa',
+                'f0dbca4c-1e63-42f3-8a97-da6ae305fc66',
+                'c9747928-6745-4315-b090-12162e979824',
+                'a380d9a3-babf-4bc3-8f47-bd23887b3fea',
+                '4cfc4940-e963-4be5-84a7-5983391de3af',
+            ];
+
+            if (res.data.user && admins.includes(res.data.user.user_uuid)) {
+                config.isAdmin = true;
+                console.log('admin', config.isAdmin);
+            }
+        }());
+
         const getProductInfo = async (uuid) => {
             const req = await fetch(`${config.ssl + config.host}/catalog/suppliergoods`, {
                 method:  'POST',
@@ -412,13 +436,14 @@ const page = async () => {
             return res;
         };
 
-        const saveChange = async (title, category, brand, fields, supplierProdData, goodUuid = '') => {
+        const saveChange = async (title, category, brand, fields, supplierProdData, goodUuid = '', toSale = '') => {
             const req = await fetch(`${config.ssl + config.host}/main/goods`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
                     action:                goodUuid !== '' ? 'updateOur' : 'addOur',
                     goods_uuid:            goodUuid,
+                    tosale:                toSale,
                     code:                  supplierProdData.code.v,
                     name:                  title,
                     ourcategory_uuid:      category,
@@ -672,8 +697,9 @@ const page = async () => {
                     li.appendChild(butt);
                     li.addEventListener('click', async () => {
                         const editorBlock = document.querySelector('.editor-block');
-                        const editor = await productEditor(product);
-                        const info = await productInfo(product);
+                        const supplier = await model.supProduct(product.uuid.v);
+                        const editor = await productEditor(product, supplier);
+                        const info = await productInfo(product, supplier);
                         const selectedLi = document.querySelector('.product-list__item--active');
 
                         console.log(product);
@@ -731,11 +757,10 @@ const page = async () => {
             return block;
         };
 
-        const productInfo = async (data) => {
+        const productInfo = async (data, supplier) => {
             const block = document.createElement('div');
             const image = document.createElement('img');
             const title = document.createElement('span');
-            const supplier = await model.supProduct(data.uuid.v);
 
             if (supplier.photos.v.images && supplier.photos.v.images.length > 0) {
                 image.src = supplier.photos.v.images[0];
@@ -859,7 +884,7 @@ const page = async () => {
             return block;
         };
 
-        const productEditor = async (data) => {
+        const productEditor = async (data, supplier) => {
             const block = document.createElement('div');
             const comment = document.createElement('span');
             const title = document.createElement('div');
@@ -867,6 +892,7 @@ const page = async () => {
             const brand = document.createElement('div');
             const productParamTitle = document.createElement('div');
             const productParams = document.createElement('div');
+            const checkPublic = document.createElement('div');
             const saveButton = document.createElement('button');
             const searchSimilarProductsBlock = document.createElement('div');
             const productInfo = data.uuid.v ? await model.productFieldsValue(data.uuid.v) : {};
@@ -1102,43 +1128,45 @@ const page = async () => {
                     title.textContent = field.represent.r ? `${field.represent.r}: ` : `${field.code.r}: `;
                     title.setAttribute('data-uuid', field.uuid.v);
 
-                    titleEditBtn.classList = 'button button--green button--small product-params__title-button';
-                    titleEditBtn.classList.add(field.represent.r ? 'button--outline' : 'button--green');
-                    titleEditBtn.addEventListener('click', () => {
-                        document.querySelector('.product-validator').appendChild(
-                            modal(`
-                                    <form class="creiate-brand">
-                                        <div class="form-group">
-                                            <label for="fieldName">Название поля</label>
-                                            <input
-                                                id="fieldName"
-                                                class="input"
-                                                placeholder="Название поля"
-                                                value=""
-                                            />
-                                        </div>
-                                    </form>
-                                `,
-                            'Сохранить',
-                            'Отменить',
-                            async (modalContent) => {
-                                const fieldNameNode = modalContent.querySelector('#fieldName');
-                                const fieldName = fieldNameNode.value;
-                                const saveFieldName = await model.editFieldTitle(fieldName, field.uuid.v);
+                    if (config.isAdmin) {
+                        titleEditBtn.classList = 'button button--green button--small product-params__title-button';
+                        titleEditBtn.classList.add(field.represent.r ? 'button--outline' : 'button--green');
+                        titleEditBtn.addEventListener('click', () => {
+                            document.querySelector('.product-validator').appendChild(
+                                modal(`
+                                        <form class="creiate-brand">
+                                            <div class="form-group">
+                                                <label for="fieldName">Название поля</label>
+                                                <input
+                                                    id="fieldName"
+                                                    class="input"
+                                                    placeholder="Название поля"
+                                                    value=""
+                                                />
+                                            </div>
+                                        </form>
+                                    `,
+                                'Сохранить',
+                                'Отменить',
+                                async (modalContent) => {
+                                    const fieldNameNode = modalContent.querySelector('#fieldName');
+                                    const fieldName = fieldNameNode.value;
+                                    const saveFieldName = await model.editFieldTitle(fieldName, field.uuid.v);
 
-                                if (saveFieldName.data.length > 0) {
-                                    alert('Поле успешно сохранено');
-                                    title.textContent = `${fieldName}: `;
-                                    titleEditBtn.classList.remove('button--green');
-                                    titleEditBtn.classList.add('button--outline');
-                                    title.appendChild(titleEditBtn);
-                                    modalContent.remove();
-                                } else {
-                                    alert('Ошибка! Попробуйте повторить запрос');
-                                }
-                            }),
-                        );
-                    });
+                                    if (saveFieldName.data.length > 0) {
+                                        alert('Поле успешно сохранено');
+                                        title.textContent = `${fieldName}: `;
+                                        titleEditBtn.classList.remove('button--green');
+                                        titleEditBtn.classList.add('button--outline');
+                                        title.appendChild(titleEditBtn);
+                                        modalContent.remove();
+                                    } else {
+                                        alert('Ошибка! Попробуйте повторить запрос');
+                                    }
+                                }),
+                            );
+                        });
+                    }
 
                     title.appendChild(titleEditBtn);
 
@@ -1186,12 +1214,13 @@ const page = async () => {
                         dropdown.appendChild(li);
                     });
 
-                    newBrandli.classList = 'brand-edit__new-brand';
-                    newBrandli.innerHTML = '<i class="icon icon-plus"></i> Добавить новый бренд';
+                    if (config.isAdmin) {
+                        newBrandli.classList = 'brand-edit__new-brand';
+                        newBrandli.innerHTML = '<i class="icon icon-plus"></i> Добавить новый бренд';
 
-                    newBrandli.addEventListener('click', () => {
-                        dropdown.style.display = 'none';
-                        document.querySelector('.product-validator').appendChild(modal(
+                        newBrandli.addEventListener('click', () => {
+                            dropdown.style.display = 'none';
+                            document.querySelector('.product-validator').appendChild(modal(
                             `
                                 <form class="creiate-brand">
                                     <div class="form-group">
@@ -1219,8 +1248,9 @@ const page = async () => {
                                     alert('Не удалось создать бренд');
                                 }
                             },
-                        ));
-                    });
+                            ));
+                        });
+                    }
 
                     dropdown.appendChild(newBrandli);
 
@@ -1260,40 +1290,6 @@ const page = async () => {
                 input.id = 'productCategory';
                 input.name = 'productCategory';
                 input.placeholder = 'Название категории';
-
-                // button.classList = 'category-edit__more-button';
-                // button.textContent = '...';
-                // button.addEventListener('click', () => {
-                //     document.querySelector('.product-validator').appendChild(modal(
-                //         `
-                //             <form class="creiate-brand">
-                //                 <div class="form-group">
-                //                     <label for="brandName">Название бренда</label>
-                //                     <input
-                //                         id="brandName"
-                //                         class="input"
-                //                         placeholder="Название бренда"
-                //                         value="${input.value}"
-                //                     />
-                //                 </div>
-                //             </form>
-                //         `,
-                //         'Выбрать',
-                //         'Отмена',
-                //         async (modalContent) => {
-                //             const brandTitleValue = modalContent.querySelector('#brandName');
-                //             const brandData = await model.newBrand(brandTitleValue.value);
-
-                //             if (!brandData.status && brandData.status !== 'Internal Server Error') {
-                //                 input.setAttribute('data-uuid', brandData.data.uuid);
-                //                 input.value = brandTitleValue.value;
-                //                 modalContent.remove();
-                //             } else {
-                //                 alert('Не удалось создать бренд');
-                //             }
-                //         },
-                //     ));
-                // });
 
                 dropdown.classList = 'category-edit__dropdown';
                 dropdown.id = 'dropdownChild';
@@ -1366,6 +1362,16 @@ const page = async () => {
                 const brand = document.getElementById('productBrand');
                 const fields = [];
                 let error = false;
+
+                function publicProduct() {
+                    const publicInput = checkPublic.querySelector('input');
+
+                    if (publicInput) {
+                        return publicInput.checked;
+                    }
+
+                    return '';
+                }
 
                 if (title.value !== ''
                     && category.getAttribute('data-uuid') !== null
@@ -1446,8 +1452,9 @@ const page = async () => {
                             category.getAttribute('data-uuid'),
                             brand.getAttribute('data-uuid'),
                             fields,
-                            data,
+                            supplier,
                             data.uuid.v || '',
+                            publicProduct(),
                         );
 
                         return saveRequest;
@@ -1486,6 +1493,31 @@ const page = async () => {
                     alert('Ошибка! Не заполнены обязательные поля.');
                 }
             }
+
+            function checkPublicBlock() {
+                if (config.isAdmin) {
+                    const input = document.createElement('input');
+                    const span = document.createElement('label');
+
+                    input.type = 'checkbox';
+                    input.name = 'public';
+                    input.id = 'checkPublic';
+                    input.classList = 'input';
+                    input.checked = data.tosale.v;
+
+                    span.textContent = 'Опубликован';
+                    span.setAttribute('for', 'checkPublic');
+
+                    checkPublic.classList = 'product-editor__check-public';
+
+                    checkPublic.appendChild(input);
+                    checkPublic.appendChild(span);
+                }
+
+                return checkPublic;
+            }
+
+            block.appendChild(checkPublicBlock());
 
             saveButton.textContent = 'Сохранить';
             saveButton.classList = 'button button--green';
