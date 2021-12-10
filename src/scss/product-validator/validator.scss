@@ -117,6 +117,17 @@
         margin-bottom: spacer(4);
         gap: spacer(2);
     }
+
+    &__codes {
+        display: flex;
+        gap: spacer(4);
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+}
+
+.product-code {
+    flex: 1 1 auto;
 }
 
 .category-edit, .brand-edit {

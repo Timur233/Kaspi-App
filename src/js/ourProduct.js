@@ -23,17 +23,9 @@ const page = async () => {
                 }),
             });
             const res = await req.json();
-            const admins = [
-                'b3b00659-ade8-48d5-8e28-6b6b571287aa',
-                'f0dbca4c-1e63-42f3-8a97-da6ae305fc66',
-                'c9747928-6745-4315-b090-12162e979824',
-                'a380d9a3-babf-4bc3-8f47-bd23887b3fea',
-                '4cfc4940-e963-4be5-84a7-5983391de3af',
-            ];
 
-            if (res.data.user && admins.includes(res.data.user.user_uuid)) {
+            if (res.data.user.isadmin) {
                 config.isAdmin = true;
-                console.log('admin', config.isAdmin);
             }
         }());
 
@@ -249,22 +241,24 @@ const page = async () => {
             }
 
             if (query !== '') {
-                filter.push({
-                    filter_order:   0,
-                    preoperator:    'AND',
-                    attribute_name: 'represent',
-                    predicate:      'ilike',
-                    value:          `%${query}%`,
-                    postoperator:   '',
-                },
-                {
-                    filter_order:   1,
-                    preoperator:    'OR',
-                    attribute_name: 'code',
-                    predicate:      'ilike',
-                    value:          `%${query}%`,
-                    postoperator:   '',
-                });
+                filter.push(
+                    {
+                        filter_order:   0,
+                        preoperator:    'AND',
+                        attribute_name: 'represent',
+                        predicate:      'ilike',
+                        value:          `%${query}%`,
+                        postoperator:   '',
+                    },
+                    {
+                        filter_order:   1,
+                        preoperator:    'OR',
+                        attribute_name: 'code',
+                        predicate:      'ilike',
+                        value:          `%${query}%`,
+                        postoperator:   '',
+                    },
+                );
             }
 
             const req = await fetch(`${config.ssl + config.host}/catalog/goods`, {
@@ -279,7 +273,10 @@ const page = async () => {
                     },
                     action:   'select',
                     datatype: 'list',
-                    sort:     [{ attribute_name: 'goods', direction: 'DESC', sort_order: 0 }],
+                    sort:     [
+                        { attribute_name: 'tosale', direction: 'DESC', sort_order: 0 },
+                        { attribute_name: 'goods', direction: 'DESC', sort_order: 1 },
+                    ],
                 }),
             });
 
@@ -436,7 +433,7 @@ const page = async () => {
             return res;
         };
 
-        const saveChange = async (title, category, brand, fields, supplierProdData, goodUuid = '', toSale = '') => {
+        const saveChange = async (title, category, brand, fields, supplierProdData, goodUuid = '', toSale = null) => {
             const req = await fetch(`${config.ssl + config.host}/main/goods`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -566,11 +563,12 @@ const page = async () => {
 
                     filterSelect.classList = 'product-list-block__suppliers-select';
                     filterSelect.innerHTML = `
-                        <option value="">Все статусы</option>
-                        <option value="iskaspiprocessing">В обработке</option>
-                        <option value="iskaspifinished">Обработан</option>
-                        <option value="iskaspierror">Ошибка</option>
-                    `;
+                            <option value="">Все статусы</option>
+                            <option value="tosale">В продаже</option>
+                            <option value="iskaspiprocessing">В обработке</option>
+                            <option value="iskaspifinished">Обработан</option>
+                            <option value="iskaspierror">Ошибка</option>
+                        `;
 
                     filterSelect.addEventListener('change', async () => {
                         let filteredProducts = [];
@@ -666,12 +664,12 @@ const page = async () => {
 
                     info.classList = 'product-list__info';
                     info.innerHTML = `
-                        <h4 class="product-list__title" title="${product.represent.r}">${product.represent.r}</h4>
-                        <ul class="product-list__desc">
-                            <li>${product.brand.r}</li>
-                            <li>${product.category.r}</li>
-                        </ul>
-                    `;
+                            <h4 class="product-list__title" title="${product.represent.r}">${product.represent.r}</h4>
+                            <ul class="product-list__desc">
+                                <li>${product.brand.r}</li>
+                                <li>${product.category.r}</li>
+                            </ul>
+                        `;
 
                     butt.classList = 'product-list__butt button button--circle button--small button--green';
 
@@ -690,6 +688,10 @@ const page = async () => {
                             li.classList.add('product-list__item--error');
                         }
                     }());
+
+                    if (product.tosale.v == true) {
+                        li.classList.add('product-list__item--complite');
+                    }
 
                     li.setAttribute('data-uuid', product.uuid.v);
                     li.appendChild(img);
@@ -778,71 +780,71 @@ const page = async () => {
                 spec.classList = 'product-spec product-info__spec';
                 spec.innerHTML = `
 
-                    <div class="product-spec__item">
-                        <span class="product-spec__title">
-                            Поставщик:
-                        </span>
-                        <span class="product-spec__value">
-                            ${supplier.supplier.r ? supplier.supplier.r : ''}
-                        </span>
-                    </div>
+                        <div class="product-spec__item">
+                            <span class="product-spec__title">
+                                Поставщик:
+                            </span>
+                            <span class="product-spec__value">
+                                ${supplier.supplier.r ? supplier.supplier.r : ''}
+                            </span>
+                        </div>
 
-                    <div class="product-spec__item">
-                        <span class="product-spec__title">
-                            Категория:
-                        </span>
-                        <span class="product-spec__value">
-                            ${data.category.r}
-                        </span>
-                    </div>
+                        <div class="product-spec__item">
+                            <span class="product-spec__title">
+                                Категория:
+                            </span>
+                            <span class="product-spec__value">
+                                ${data.category.r}
+                            </span>
+                        </div>
 
-                    <div class="product-spec__item">
-                        <span class="product-spec__title">
-                            Код:
-                        </span>
-                        <span class="product-spec__value">
-                            ${supplier.code.v}
-                        </span>
-                    </div>
+                        <div class="product-spec__item">
+                            <span class="product-spec__title">
+                                Код:
+                            </span>
+                            <span class="product-spec__value">
+                                ${supplier.code.v}
+                            </span>
+                        </div>
 
-                    <div class="product-spec__item">
-                        <span class="product-spec__title">
-                            Ссылка на товар:
-                        </span>
-                        <span class="product-spec__value">
-                            <a href="${supplier.url.v}"
-                                class="product-spec__arrow-button button button--small button--green"
-                                target="_blank"
-                            >Перейти</a>
-                        </span>
-                    </div>
+                        <div class="product-spec__item">
+                            <span class="product-spec__title">
+                                Ссылка на товар:
+                            </span>
+                            <span class="product-spec__value">
+                                <a href="${supplier.url.v}"
+                                    class="product-spec__arrow-button button button--small button--green"
+                                    target="_blank"
+                                >Перейти</a>
+                            </span>
+                        </div>
 
-                    <div class="product-spec__item">
-                        <span class="product-spec__title">
-                            Поиск на каспи:
-                        </span>
-                        <span class="product-spec__value">
-                            <a
-                                href="https://kaspi.kz/shop/search/?text=${data.represent.v}"
-                                class="product-spec__arrow-button button button--small button--red"
-                                target="_blank"
-                            >Перейти</a>
-                        </span>
-                    </div>
+                        <div class="product-spec__item">
+                            <span class="product-spec__title">
+                                Поиск на каспи:
+                            </span>
+                            <span class="product-spec__value">
+                                <a
+                                    href="https://kaspi.kz/shop/search/?text=${data.represent.v}"
+                                    class="product-spec__arrow-button button button--small button--red"
+                                    target="_blank"
+                                >Перейти</a>
+                            </span>
+                        </div>
 
-                `;
+                    `;
 
                 function getAdditionalInfo(key, val) {
                     spec.innerHTML += `
-                        <div class="product-spec__item">
-                            <span class="product-spec__title">
-                                ${key}:
-                            </span>
-                            <span class="product-spec__value">
-                                ${val}
-                            </span>
-                        </div>
-                    `;
+                            <div class="product-spec__item">
+                                <span class="product-spec__title">
+                                    ${key}:
+                                </span>
+                                <span class="product-spec__value">
+                                    ${val}
+                                </span>
+                            </div>
+                        `;
                 }
 
                 async function getMarvelFields() {
@@ -871,8 +873,8 @@ const page = async () => {
                     });
                 } else {
                     spec.innerHTML += `
-                        <img src="../img/spin-dark.svg" class="preloader-img"/>
-                    `;
+                            <img src="../img/spin-dark.svg" class="preloader-img"/>
+                        `;
                     getMarvelFields();
                 }
 
@@ -888,6 +890,7 @@ const page = async () => {
             const block = document.createElement('div');
             const comment = document.createElement('span');
             const title = document.createElement('div');
+            const code = document.createElement('div');
             const category = document.createElement('div');
             const brand = document.createElement('div');
             const productParamTitle = document.createElement('div');
@@ -905,11 +908,28 @@ const page = async () => {
 
             title.classList = 'title-edit product-editor__title';
             title.innerHTML = `
-                <label class="title-edit__label" for="productTitle">Название</label>
-                <input class="title-edit__input input" name="productTitle"
-                id="productTitle" placeholder="Название" value="${data.represent.r}">
-            `;
+                    <label class="title-edit__label" for="productTitle">Название</label>
+                    <input class="title-edit__input input" name="productTitle"
+                    id="productTitle" placeholder="Название" value="${data.represent.r}">
+                `;
             block.appendChild(title);
+
+            if (productInfo.sku) {
+                code.classList = 'title-edit product-editor__codes';
+                code.innerHTML = `
+              <div class="product-code">
+                  <label class="title-edit__label" for="productSku">SKU</label>
+                  <input class="sku-edit__input input" name="productSku"
+                  id="productSku" disabled="disabled" value="${productInfo.sku}">
+              </div>
+              <div class="product-code">
+                  <label class="title-edit__label" for="productCode">Id Kaspi</label>
+                  <input class="code-edit__input input" name="productCode"
+                  id="productCode" disabled="disabled" value="${productInfo.idkaspi || ''}">
+              </div>
+          `;
+                block.appendChild(code);
+            }
 
             async function autoCompliteBrand(brandInput) {
                 if (productInfo.brand_uuid) {
@@ -938,8 +958,8 @@ const page = async () => {
 
                     watchButton.classList = 'button button--small button--white';
                     watchButton.innerHTML = `
-                        <i class="icon icon-eye"></i>
-                    `;
+                            <i class="icon icon-eye"></i>
+                        `;
                     watchButton.addEventListener('click', async () => {
                         const productInfo = await model.productFieldsValue(item.goods_uuid);
                         let productFields = '';
@@ -948,49 +968,49 @@ const page = async () => {
                             const specLabel = document.querySelector(`.product-params__title[data-uuid="${spec.specification}"]`);
 
                             productFields += `
-                                <li class="watch-product__fields-item">
-                                    <span>
-                                        <strong>${specLabel.textContent}:</strong>
-                                    </span>
-                                    <span>${spec.value ? spec.value : spec.value}</span>
-                                </li>
-                            `;
+                                    <li class="watch-product__fields-item">
+                                        <span>
+                                            <strong>${specLabel.textContent}:</strong>
+                                        </span>
+                                        <span>${spec.value ? spec.value : spec.value}</span>
+                                    </li>
+                                `;
                         });
 
                         document.querySelector('.product-validator').appendChild(modal(
-                            `
-                                <div class="watch-product">
-                                    <h4 class="watch-product__title">${productInfo.goods_represent}</h4>
-                                    <ul class="watch-product__fields">
-                                        <li class="watch-product__fields-item">
-                                            <span><strong>Категория:</strong></span>
-                                            <span>${productInfo.category_represent ? productInfo.category_represent : productInfo.category_uuid}</span>
-                                        </li>
-                                        <li class="watch-product__fields-item">
-                                            <span><strong>Бренд:</strong></span>
-                                            <span>${productInfo.brand_represent ? productInfo.brand_represent : productInfo.brand_uuid}</span>
-                                        </li>
-                                        ${productFields}
-                                    </ul>
-                                </div>
-                            `,
-                            'Связать с этим товаром',
-                            'Закрыть',
-                            async (modalContent) => {
-                                if (confirm('Вы уверенны что хотите связать эти товары?')) {
-                                    const connectProducts = await model.connectProducts(data.uuid.v, item.goods_uuid);
+                                `
+                                    <div class="watch-product">
+                                        <h4 class="watch-product__title">${productInfo.goods_represent}</h4>
+                                        <ul class="watch-product__fields">
+                                            <li class="watch-product__fields-item">
+                                                <span><strong>Категория:</strong></span>
+                                                <span>${productInfo.category_represent ? productInfo.category_represent : productInfo.category_uuid}</span>
+                                            </li>
+                                            <li class="watch-product__fields-item">
+                                                <span><strong>Бренд:</strong></span>
+                                                <span>${productInfo.brand_represent ? productInfo.brand_represent : productInfo.brand_uuid}</span>
+                                            </li>
+                                            ${productFields}
+                                        </ul>
+                                    </div>
+                                `,
+                                'Связать с этим товаром',
+                                'Закрыть',
+                                async (modalContent) => {
+                                    if (confirm('Вы уверенны что хотите связать эти товары?')) {
+                                        const connectProducts = await model.connectProducts(data.uuid.v, item.goods_uuid);
 
-                                    selectNextProduct(200);
-                                    modalContent.remove();
-                                }
-                            },
+                                        selectNextProduct(200);
+                                        modalContent.remove();
+                                    }
+                                },
                         ));
                     });
 
                     linkButton.classList = 'button button--small button--green';
                     linkButton.innerHTML = `
-                        Связать
-                    `;
+                            Связать
+                        `;
                     linkButton.addEventListener('click', async () => {
                         const connectProducts = await model.connectProducts(data.uuid.v, item.goods_uuid);
 
@@ -1103,7 +1123,7 @@ const page = async () => {
                         case '2719e1b8-2c6d-49b7-ba5d-352061757f31': // boolean
                             value = document.createElement('input');
                             value.classList.add('input');
-                            value.checked = getFieldData(field.uuid.v) ? 'checked' : '';
+                            value.checked = getFieldData(field.uuid.v) === 'true' ? 'checked' : '';
                             value.type = 'checkbox';
                             break;
                         case '2a2ea21a-98d8-4091-903a-bad00e5f0740': // Не распознанный тип
@@ -1133,37 +1153,39 @@ const page = async () => {
                         titleEditBtn.classList.add(field.represent.r ? 'button--outline' : 'button--green');
                         titleEditBtn.addEventListener('click', () => {
                             document.querySelector('.product-validator').appendChild(
-                                modal(`
-                                        <form class="creiate-brand">
-                                            <div class="form-group">
-                                                <label for="fieldName">Название поля</label>
-                                                <input
-                                                    id="fieldName"
-                                                    class="input"
-                                                    placeholder="Название поля"
-                                                    value=""
-                                                />
-                                            </div>
-                                        </form>
-                                    `,
-                                'Сохранить',
-                                'Отменить',
-                                async (modalContent) => {
-                                    const fieldNameNode = modalContent.querySelector('#fieldName');
-                                    const fieldName = fieldNameNode.value;
-                                    const saveFieldName = await model.editFieldTitle(fieldName, field.uuid.v);
+                                modal(
+  `
+                                            <form class="creiate-brand">
+                                                <div class="form-group">
+                                                    <label for="fieldName">Название поля</label>
+                                                    <input
+                                                        id="fieldName"
+                                                        class="input"
+                                                        placeholder="Название поля"
+                                                        value=""
+                                                    />
+                                                </div>
+                                            </form>
+                                        `,
+  'Сохранить',
+  'Отменить',
+  async (modalContent) => {
+      const fieldNameNode = modalContent.querySelector('#fieldName');
+      const fieldName = fieldNameNode.value;
+      const saveFieldName = await model.editFieldTitle(fieldName, field.uuid.v);
 
-                                    if (saveFieldName.data.length > 0) {
-                                        alert('Поле успешно сохранено');
-                                        title.textContent = `${fieldName}: `;
-                                        titleEditBtn.classList.remove('button--green');
-                                        titleEditBtn.classList.add('button--outline');
-                                        title.appendChild(titleEditBtn);
-                                        modalContent.remove();
-                                    } else {
-                                        alert('Ошибка! Попробуйте повторить запрос');
-                                    }
-                                }),
+      if (saveFieldName.data.length > 0) {
+          alert('Поле успешно сохранено');
+          title.textContent = `${fieldName}: `;
+          titleEditBtn.classList.remove('button--green');
+          titleEditBtn.classList.add('button--outline');
+          title.appendChild(titleEditBtn);
+          modalContent.remove();
+      } else {
+          alert('Ошибка! Попробуйте повторить запрос');
+      }
+  },
+                                ),
                             );
                         });
                     }
@@ -1221,33 +1243,33 @@ const page = async () => {
                         newBrandli.addEventListener('click', () => {
                             dropdown.style.display = 'none';
                             document.querySelector('.product-validator').appendChild(modal(
-                            `
-                                <form class="creiate-brand">
-                                    <div class="form-group">
-                                        <label for="brandName">Название бренда</label>
-                                        <input
-                                            id="brandName"
-                                            class="input"
-                                            placeholder="Название бренда"
-                                            value="${input.value}"
-                                        />
-                                    </div>
-                                </form>
-                            `,
-                            'Отправить',
-                            'Отмена',
-                            async (modalContent) => {
-                                const brandTitleValue = modalContent.querySelector('#brandName');
-                                const brandData = await model.newBrand(brandTitleValue.value.trim());
+                                `
+                                    <form class="creiate-brand">
+                                        <div class="form-group">
+                                            <label for="brandName">Название бренда</label>
+                                            <input
+                                                id="brandName"
+                                                class="input"
+                                                placeholder="Название бренда"
+                                                value="${input.value}"
+                                            />
+                                        </div>
+                                    </form>
+                                `,
+                                'Отправить',
+                                'Отмена',
+                                async (modalContent) => {
+                                    const brandTitleValue = modalContent.querySelector('#brandName');
+                                    const brandData = await model.newBrand(brandTitleValue.value.trim());
 
-                                if (!brandData.status && brandData.status !== 'Internal Server Error') {
-                                    input.setAttribute('data-uuid', brandData.data.uuid);
-                                    input.value = brandTitleValue.value;
-                                    modalContent.remove();
-                                } else {
-                                    alert('Не удалось создать бренд');
-                                }
-                            },
+                                    if (!brandData.status && brandData.status !== 'Internal Server Error') {
+                                        input.setAttribute('data-uuid', brandData.data.uuid);
+                                        input.value = brandTitleValue.value;
+                                        modalContent.remove();
+                                    } else {
+                                        alert('Не удалось создать бренд');
+                                    }
+                                },
                             ));
                         });
                     }
@@ -1275,8 +1297,8 @@ const page = async () => {
 
             brand.classList = 'brand-edit product-editor__brand';
             brand.innerHTML = `
-                <label class="brand-edit__label" for="productBrand">Выбрать бренд</label>
-            `;
+                    <label class="brand-edit__label" for="productBrand">Выбрать бренд</label>
+                `;
 
             block.appendChild(brand);
             brandSelector();
@@ -1346,8 +1368,8 @@ const page = async () => {
 
             category.classList = 'category-edit product-editor__category';
             category.innerHTML = `
-                <label class="category-edit__label" for="productCategory">Выбрать категорию</label>
-            `;
+                    <label class="category-edit__label" for="productCategory">Выбрать категорию</label>
+                `;
 
             block.appendChild(category);
             categorySelector();
@@ -1367,15 +1389,18 @@ const page = async () => {
                     const publicInput = checkPublic.querySelector('input');
 
                     if (publicInput) {
+                        data.tosale.r = publicInput.checked;
+                        data.tosale.v = publicInput.checked;
+
                         return publicInput.checked;
                     }
 
-                    return '';
+                    return null;
                 }
 
                 if (title.value !== ''
-                    && category.getAttribute('data-uuid') !== null
-                    && brand.getAttribute('data-uuid') !== null
+                        && category.getAttribute('data-uuid') !== null
+                        && brand.getAttribute('data-uuid') !== null
                 ) {
                     const params = document.querySelector('.product-params');
                     const filedNodes = params.querySelectorAll('input ,select');
@@ -1697,8 +1722,8 @@ const paginator = (countItems, type, callback) => {
 
     paginationLabel.classList = 'pagination__title';
     paginationLabel.textContent = `
-        Показано ${config.page * 25} элементов из ${config.countItems}
-    `;
+            Показано ${config.page * 25} элементов из ${config.countItems}
+        `;
     block.appendChild(paginationLabel);
 
     block.appendChild(getPaginationList());
@@ -1717,27 +1742,27 @@ const modal = (html, saveBtnLabel = 'Сохранить', cancelBtnLabel = 'За
 
     wrapperHtml.classList = 'main-modal';
     wrapperHtml.innerHTML = `
-        <div class="main-modal__content">
-            <button class="main-modal__close-button">
-                <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path
-                        d="M1 1L10 10M10 10L19 19M10 10L19 1M10 10L1 19"
-                        stroke="#333333"
-                        stroke-width="1.3"
-                    />
-                </svg>
-            </button>
-            ${html}
-            <div class="main-modal__buttons-group"></div>
-        </div>
-        <div class="main-modal__bg"></div>
-    `;
+            <div class="main-modal__content">
+                <button class="main-modal__close-button">
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M1 1L10 10M10 10L19 19M10 10L19 1M10 10L1 19"
+                            stroke="#333333"
+                            stroke-width="1.3"
+                        />
+                    </svg>
+                </button>
+                ${html}
+                <div class="main-modal__buttons-group"></div>
+            </div>
+            <div class="main-modal__bg"></div>
+        `;
 
     function closeModal() {
         wrapperHtml.remove();
