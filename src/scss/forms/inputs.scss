@@ -1,6 +1,12 @@
 .form-group {
     display: block;
-    padding-bottom: spacer(3);
+    padding-bottom: spacer(4);
+
+    &__label {
+        font-size: $font-normal;
+        line-height: 1.2;
+        font-weight: 500;
+    }
 
     label {
         display: block;
@@ -64,5 +70,64 @@
         border-color: #86b7fe;
         outline: 0;
         box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
+    }
+}
+
+.switch {
+    position: relative;
+    display: inline-block !important;
+    width: 35px !important;
+    height: 18px;
+
+    & > input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    & > .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    & > .slider:before {
+        position: absolute;
+        content: "";
+        height: 14px;
+        width: 14px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    & > input:checked + .slider {
+        background-color: $green;
+    }
+
+    & > input:focus + .slider {
+        box-shadow: 0 0 1px $green;
+    }
+
+    & > input:checked + .slider:before {
+        -webkit-transform: translateX(17px);
+        -ms-transform: translateX(17px);
+        transform: translateX(17px);
+    }
+
+    & > .slider--round {
+        border-radius: 34px;
+    }
+
+    & > .slider--round:before {
+        border-radius: 50%;
     }
 }

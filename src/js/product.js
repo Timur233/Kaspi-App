@@ -1447,40 +1447,6 @@ const page = async () => {
                 input.name = 'productCategory';
                 input.placeholder = 'Название категории';
 
-                // button.classList = 'category-edit__more-button';
-                // button.textContent = '...';
-                // button.addEventListener('click', () => {
-                //     document.querySelector('.product-validator').appendChild(modal(
-                //         `
-                //             <form class="creiate-brand">
-                //                 <div class="form-group">
-                //                     <label for="brandName">Название бренда</label>
-                //                     <input
-                //                         id="brandName"
-                //                         class="input"
-                //                         placeholder="Название бренда"
-                //                         value="${input.value}"
-                //                     />
-                //                 </div>
-                //             </form>
-                //         `,
-                //         'Выбрать',
-                //         'Отмена',
-                //         async (modalContent) => {
-                //             const brandTitleValue = modalContent.querySelector('#brandName');
-                //             const brandData = await model.newBrand(brandTitleValue.value);
-
-                //             if (!brandData.status && brandData.status !== 'Internal Server Error') {
-                //                 input.setAttribute('data-uuid', brandData.data.uuid);
-                //                 input.value = brandTitleValue.value;
-                //                 modalContent.remove();
-                //             } else {
-                //                 alert('Не удалось создать бренд');
-                //             }
-                //         },
-                //     ));
-                // });
-
                 dropdown.classList = 'category-edit__dropdown';
                 dropdown.id = 'dropdownChild';
 

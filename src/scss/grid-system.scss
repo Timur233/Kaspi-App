@@ -1,0 +1,14 @@
+.grid {
+    display: flex;
+    flex-wrap: wrap;
+
+    &__col {
+        &--4 {
+            flex: 0 0 33.33333%;
+
+            &:not(:nth-child(3n)) {
+                padding-right: spacer(4);
+            }
+        }
+    }
+}

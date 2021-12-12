@@ -3,8 +3,285 @@ import '../scss/main.scss';
 const config = {
     ssl:     'https://',
     host:    'asi-mart.kz',
-    session: '5c53e682-ea1a-419a-9631-ec1c779b9f51',
+    session: 'de4ad950-6edc-4cd1-b41f-2eec79e389e5',
 };
+
+const editor = (() => {
+    // const getCategoryData = async uuid => uuid;
+
+    const getKaspiCategory = async (uuid) => {
+        const req = await fetch(`${config.ssl + config.host}/catalog/marketplacecategories`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                ASM_session:   config.session,
+                instance_uuid: uuid,
+                action:        'select',
+                datatype:      'instance',
+            }),
+        });
+
+        const res = await req.json();
+
+        return res.data.instance;
+    };
+
+    const findCategory = async (title = '') => {
+        const filter = [];
+
+        filter.push({
+            filter_order:   0,
+            preoperator:    'AND',
+            attribute_name: 'isfolder',
+            predicate:      '=',
+            value:          'true',
+            postoperator:   '',
+        });
+
+        const req = await fetch(`${config.ssl + config.host}/catalog/categories`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                ASM_session: config.session,
+                limit:       1000000,
+                filters:     {
+                    instance: filter,
+                },
+                search:   title,
+                action:   'select',
+                datatype: 'list',
+            }),
+        });
+
+        const res = await req.json();
+
+        return res.data.list;
+    };
+
+    const render = async (data) => {
+        let elem = document.getElementById('category-editor');
+        const categoryMarket = await getKaspiCategory(data.uuid.v);
+
+        (function () {
+            if (elem === null) {
+                elem = document.createElement('div');
+                elem.classList = 'cats-validator__editor cats-editor';
+                elem.id = 'category-editor';
+            } else {
+                elem.innerHTML = '';
+            }
+        }());
+
+        const name = (title) => {
+            const wrapper = document.createElement('div');
+
+            wrapper.classList = 'category-editor__group form-group';
+            wrapper.innerHTML = `
+                <label for="categotyTitle" class="form-group__label">Название:</label>
+                <input
+                    id="categotyTitle"
+                    name="categotyTitle"
+                    disabled="disabled"
+                    class="form-group__input input"
+                    value="${title}"
+                >
+            `;
+
+            return wrapper;
+        };
+
+        const display = (isBlocked) => {
+            const wrapper = document.createElement('div');
+            const switcher = document.createElement('label');
+            const input = document.createElement('input');
+            const round = document.createElement('span');
+
+            switcher.classList = 'switch';
+
+            input.hidden = 'hidden';
+            input.type = 'checkbox';
+            input.checked = isBlocked;
+
+            round.classList = 'slider slider--round';
+
+            switcher.appendChild(input);
+            switcher.appendChild(round);
+
+            wrapper.classList = 'category-editor__group form-group';
+            wrapper.innerHTML = `
+                    <label for="categotyTitle" class="form-group__label">Заблокировать категорию:</label>
+            `;
+            wrapper.appendChild(switcher);
+
+            return wrapper;
+        };
+
+        const parent = (title, uuid) => {
+            const wrapper = document.createElement('div');
+            const input = document.createElement('input');
+            const dropdown = document.createElement('ul');
+
+            input.classList = 'form-group__input input custom-select';
+            input.id = 'categoryFolder';
+            input.name = 'categoryFolder';
+            input.placeholder = 'Название категории';
+            input.value = title;
+            input.setAttribute('data-uuid', uuid);
+
+            dropdown.classList = 'category-edit__dropdown';
+            dropdown.id = 'dropdownChild';
+
+            async function searchCats(query) {
+                const result = await findCategory(query.toLowerCase());
+
+                dropdown.style.display = 'block';
+                dropdown.innerHTML = '';
+
+                if (result.length === 0) {
+                    const li = document.createElement('li');
+
+                    li.textContent = 'Ничего не найдено';
+                    dropdown.appendChild(li);
+                }
+
+                result.forEach((el) => {
+                    const li = document.createElement('li');
+
+                    li.textContent = el.represent.r;
+                    li.setAttribute('data-uuid', el.uuid.v);
+                    li.setAttribute('data-code', el.code.v);
+
+                    li.addEventListener('click', () => {
+                        input.value = li.textContent;
+                        input.setAttribute('data-uuid', li.getAttribute('data-uuid'));
+                        dropdown.style.display = 'none';
+                        // getFields(el.uuid.v);
+                    });
+
+                    dropdown.appendChild(li);
+                });
+
+                return result;
+            }
+
+            input.addEventListener('input', (e) => {
+                if (input.value.length >= 3) {
+                    searchCats(input.value);
+                }
+
+                if (input.value === '' || e.data === null) {
+                    input.setAttribute('data-uuid', '');
+                }
+            });
+
+            wrapper.classList = 'category-editor__group form-group';
+            wrapper.innerHTML = `
+                <label for="categoryFolder" class="form-group__label">Родительская категория:</label>
+            `;
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(dropdown);
+
+            return wrapper;
+        };
+
+        const procents = (minMarkup, maxMarkup, kaspiProcent) => {
+            const wrapper = document.createElement('div');
+
+            function kaspiProcentRender(procent) {
+                const wrapper = document.createElement('div');
+
+                wrapper.classList = 'category-editor__group form-group grid__col--4';
+                wrapper.innerHTML = `
+                    <label for="kaspiProcent" class="form-group__label">Процент каспи:</label>
+                    <input
+                        id="kaspiProcent"
+                        name="kaspiProcent"
+                        class="form-group__input input"
+                        type="number"
+                        step="0.01"
+                        value="${procent}"
+                    >
+                `;
+
+                return wrapper;
+            }
+
+            function maxMarkupRender(procent) {
+                const wrapper = document.createElement('div');
+
+                wrapper.classList = 'category-editor__group form-group grid__col--4';
+                wrapper.innerHTML = `
+                    <label for="maxMarkup" class="form-group__label">Минимальная наценка:</label>
+                    <input
+                        id="maxMarkup"
+                        name="maxMarkup"
+                        class="form-group__input input"
+                        type="number"
+                        step="0.01"
+                        value="${procent}"
+                    >
+                `;
+
+                return wrapper;
+            }
+
+            function minMarkupRender(procent) {
+                const wrapper = document.createElement('div');
+
+                wrapper.classList = 'category-editor__group form-group grid__col--4';
+                wrapper.innerHTML = `
+                    <label for="minMarkup" class="form-group__label">Минимальная наценка:</label>
+                    <input
+                        id="minMarkup"
+                        name="minMarkup"
+                        class="form-group__input input"
+                        type="number"
+                        step="0.01"
+                        value="${procent}"
+                    >
+                `;
+
+                return wrapper;
+            }
+
+            wrapper.classList = 'grid';
+            wrapper.appendChild(minMarkupRender(minMarkup));
+            wrapper.appendChild(maxMarkupRender(maxMarkup));
+            wrapper.appendChild(kaspiProcentRender(kaspiProcent));
+
+            return wrapper;
+        };
+
+        const controll = (uuid) => {
+            const wrapper = document.createElement('div');
+            const button = document.createElement('button');
+
+            button.classList = 'button button--green';
+            button.setAttribute('data-uuid', uuid);
+            button.textContent = 'Сохранить';
+
+            button.addEventListener('click', async () => {
+                alert('Рано еще тыкать в меня!');
+            });
+
+            wrapper.classList = 'category-editor__group form-group';
+            wrapper.appendChild(button);
+
+            return wrapper;
+        };
+
+        elem.appendChild(name(data.represent.r));
+        elem.appendChild(display(data.blocked.v));
+        elem.appendChild(parent(data.folder.r, data.folder.v));
+        elem.appendChild(procents(data.minmarkup.r, data.maxmarkup.v, categoryMarket.markuppercent.v));
+        elem.appendChild(controll(data.uuid.r));
+
+        return elem;
+    };
+
+    return { render };
+})();
 
 const validator = function (node, type, list) {
     let search = '';
@@ -225,10 +502,13 @@ const validator = function (node, type, list) {
                     wrapper.prepend(checkBox);
 
                     detailsButton.classList = 'category-list__fly-button';
-                    detailsButton.title = 'Существующие связи';
+                    detailsButton.title = 'Параметры';
                     detailsButton.innerHTML = '<i class="icon icon-align-justify"></i>';
                     detailsButton.setAttribute('data-uuid', uuid);
-                    detailsButton.addEventListener('click', () => { console.log(`Подробности ${uuid}`); });
+                    detailsButton.addEventListener('click', async () => {
+                        document.querySelector('.cats-validator__wrapper')
+                            .append(await editor.render(category));
+                    });
                     wrapper.appendChild(detailsButton);
                 }
 
