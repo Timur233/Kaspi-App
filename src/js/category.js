@@ -506,6 +506,14 @@ const validator = function (node, type, list) {
                     detailsButton.innerHTML = '<i class="icon icon-align-justify"></i>';
                     detailsButton.setAttribute('data-uuid', uuid);
                     detailsButton.addEventListener('click', async () => {
+                        const selectedButton = document.querySelector('.category-list__fly-button--selected');
+
+                        if (selectedButton !== null) {
+                            selectedButton.classList.remove('category-list__fly-button--selected');
+                        }
+
+                        detailsButton.classList.add('category-list__fly-button--selected');
+
                         document.querySelector('.cats-validator__wrapper')
                             .append(await editor.render(category));
                     });

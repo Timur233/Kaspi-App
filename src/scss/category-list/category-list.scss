@@ -78,6 +78,10 @@
         cursor: pointer;
         background: none;
         font-size: $font-large;
+
+        &--selected {
+            color: $green;
+        }
     }
 
     &__sub-menu {
