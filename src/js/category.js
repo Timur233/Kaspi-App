@@ -3,13 +3,30 @@ import '../scss/main.scss';
 const config = {
     ssl:     'https://',
     host:    'asi-mart.kz',
-    session: 'de4ad950-6edc-4cd1-b41f-2eec79e389e5',
+    session: '82c757f3-c558-4e4c-8627-c99fa08f6a54',
 };
 
 const editor = (() => {
     // const getCategoryData = async uuid => uuid;
 
     const getKaspiCategory = async (uuid) => {
+        const req = await fetch(`${config.ssl + config.host}/catalog/marketplacecategories`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                ASM_session:   config.session,
+                instance_uuid: uuid,
+                action:        'select',
+                datatype:      'instance',
+            }),
+        });
+
+        const res = await req.json();
+
+        return res.data.instance;
+    };
+
+    const updateCategory = async (uuid) => {
         const req = await fetch(`${config.ssl + config.host}/catalog/marketplacecategories`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -253,6 +270,10 @@ const editor = (() => {
             return wrapper;
         };
 
+        const collectFormData = () => {
+
+        };
+
         const controll = (uuid) => {
             const wrapper = document.createElement('div');
             const button = document.createElement('button');
@@ -434,6 +455,8 @@ const validator = function (node, type, list) {
     async function setBody(searchcats = '', searchMode = false) {
         const block = bodyBlock;
         const listEl = document.createElement('ul');
+        const bulkEditPanel = document.createElement('div');
+        const selectedList = new Set();
 
         clearBody();
 
@@ -452,14 +475,76 @@ const validator = function (node, type, list) {
             button.classList.toggle('button--outline');
         }
 
-        function changeCheckBox() {
-            const checkedInput = block.querySelector('.category-list__checker:checked');
+        function clearSelectedItems() {
+            const selectedItems = document.querySelectorAll('.category-list__checker:checked');
 
-            if (checkedInput) {
-                console.log(checkedInput);
-            } else {
-                console.log('Nea');
+            selectedList.clear();
+
+            selectedItems.forEach((item) => {
+                item.checked = false;
+            });
+
+            setBulkEditPanel();
+        }
+
+        function setBulkEditPanel() {
+            const countLists = selectedList.size;
+
+            bulkEditPanel.classList = 'validator__bulk-edit';
+            bulkEditPanel.innerHTML = '';
+
+            block.style.paddingTop = '0px';
+
+            if (countLists > 0) {
+                const editBtn = document.createElement('button');
+                const clearSelect = document.createElement('button');
+
+                editBtn.classList = 'button button--circle button--small button--green';
+                editBtn.style.fontWeight = 400;
+                editBtn.textContent = `Редактировать (${countLists})`;
+                editBtn.addEventListener('click', () => {
+                    document.querySelector('.cats-validator').appendChild(modal(
+                        `
+                            <div class="edit-category">
+                                
+                            </div>
+                        `,
+                        'Отправить',
+                        'Закрыть',
+                        async (modalContent) => {
+                            if (confirm('Вы уверенны в правильности данных?')) {
+                                clearSelectedItems();
+                                modalContent.remove();
+                            }
+                        },
+                    ));
+                });
+
+                clearSelect.classList = 'button button--circle button--small button--outline';
+                clearSelect.style.fontWeight = 400;
+                clearSelect.textContent = 'Снять выделение';
+                clearSelect.addEventListener('click', () => {
+                    clearSelectedItems();
+                });
+
+                bulkEditPanel.classList.add('validator__bulk-edit--open');
+                bulkEditPanel.appendChild(editBtn);
+                bulkEditPanel.appendChild(clearSelect);
+
+                block.style.paddingTop = '40px';
             }
+
+            titleBlock.appendChild(bulkEditPanel);
+        }
+
+        function changeCheckBox(uuid, state) {
+            if (state) {
+                selectedList.add(uuid);
+            } else {
+                selectedList.delete(uuid);
+            }
+
+            setBulkEditPanel();
         }
 
         async function getCategoryItem(category) {
@@ -497,7 +582,7 @@ const validator = function (node, type, list) {
                     checkBox.classList = 'category-list__checker input';
                     checkBox.setAttribute('data-uuid', uuid);
                     checkBox.addEventListener('click', () => {
-                        changeCheckBox();
+                        changeCheckBox(uuid, checkBox.checked);
                     });
                     wrapper.prepend(checkBox);
 
@@ -507,12 +592,15 @@ const validator = function (node, type, list) {
                     detailsButton.setAttribute('data-uuid', uuid);
                     detailsButton.addEventListener('click', async () => {
                         const selectedButton = document.querySelector('.category-list__fly-button--selected');
+                        const selectedSpan = document.querySelector('.category-name--selected');
 
                         if (selectedButton !== null) {
                             selectedButton.classList.remove('category-list__fly-button--selected');
+                            selectedSpan.classList.remove('category-name--selected');
                         }
 
                         detailsButton.classList.add('category-list__fly-button--selected');
+                        span.classList.add('category-name--selected');
 
                         document.querySelector('.cats-validator__wrapper')
                             .append(await editor.render(category));
@@ -683,6 +771,73 @@ const validator = function (node, type, list) {
     return {
         render: renderValidator,
     };
+};
+
+const modal = (html, saveBtnLabel = 'Сохранить', cancelBtnLabel = 'Закрыть', callback) => {
+    const saveBtn = document.createElement('button');
+    const cancelBtn = document.createElement('button');
+    const wrapperHtml = document.createElement('div');
+    let closeBtn = {};
+    let modalBg = {};
+    let buttonsGroup = {};
+
+    wrapperHtml.classList = 'main-modal';
+    wrapperHtml.innerHTML = `
+            <div class="main-modal__content">
+                <button class="main-modal__close-button">
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M1 1L10 10M10 10L19 19M10 10L19 1M10 10L1 19"
+                            stroke="#333333"
+                            stroke-width="1.3"
+                        />
+                    </svg>
+                </button>
+                ${html}
+                <div class="main-modal__buttons-group"></div>
+            </div>
+            <div class="main-modal__bg"></div>
+        `;
+
+    function closeModal() {
+        wrapperHtml.remove();
+    }
+
+    buttonsGroup = wrapperHtml.querySelector('.main-modal__buttons-group');
+
+    saveBtn.classList = 'button button--middle button--green';
+    saveBtn.textContent = saveBtnLabel;
+    saveBtn.addEventListener('click', () => {
+        callback(wrapperHtml);
+    });
+
+    buttonsGroup.appendChild(saveBtn);
+
+    cancelBtn.classList = 'button button--middle button--gray';
+    cancelBtn.textContent = cancelBtnLabel;
+    cancelBtn.addEventListener('click', () => {
+        closeModal();
+    });
+
+    closeBtn = wrapperHtml.querySelector('.main-modal__close-button');
+    closeBtn.addEventListener('click', () => {
+        closeModal();
+    });
+
+    modalBg = wrapperHtml.querySelector('.main-modal__bg');
+    modalBg.addEventListener('click', () => {
+        closeModal();
+    });
+
+    buttonsGroup.appendChild(cancelBtn);
+
+    return wrapperHtml;
 };
 
 async function start() {

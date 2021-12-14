@@ -1,6 +1,7 @@
 .form-group {
     display: block;
     padding-bottom: spacer(4);
+    position: relative;
 
     &__label {
         font-size: $font-normal;

@@ -9,7 +9,7 @@
         grid-template-rows: 1fr;
         grid-template-columns: 1fr 1fr;
         gap: spacer(4);
-        height: 85%;
+        height: 83%;
     }
 
     &__item {
@@ -21,6 +21,7 @@
 .validator {
     overflow: hidden;
     border-radius: softer(2);
+    height: 100%;
 
     &__title-block {
         background-color: $dark-green;
@@ -29,6 +30,7 @@
         align-items: center;
         gap: spacer(3);
         padding: spacer(2) spacer(3);
+        position: relative;
     }
 
     &__title {
@@ -69,6 +71,8 @@
         background: #f9f9f9;
         border-radius: 0 0 softer(2);
         overflow-y: auto;
+        height: 93%;
+        position: relative;
 
         &::-webkit-scrollbar {
             width: 6px;
@@ -84,4 +88,28 @@
             border-radius: 10px;
         }
     }
+
+    &__bulk-edit {
+        position: absolute;
+        left: 1px;
+        bottom: -42px;
+        right: 0px;
+        padding: spacer(2);
+        gap: spacer(4);
+        display: none;
+        justify-content: flex-end;
+        background: #fff;
+        border-bottom: 1px solid #ccc;
+        z-index: 1;
+        margin-right: 8px;
+        box-shadow: 0 2px 4px rgb(28 24 25 / 10%);
+
+        &--open {
+            display: flex;
+        }
+    }
+}
+
+.category-name--selected {
+    color: $green;
 }
